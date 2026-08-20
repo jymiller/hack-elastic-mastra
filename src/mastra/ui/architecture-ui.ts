@@ -14,12 +14,12 @@ import {
 
 const damaLaQrSvg = await createDamaLaPodcastQrSvg();
 
-const page = String.raw`<!doctype html>
+export const architecturePage = String.raw`<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="The live Great Questions AI solution architecture." />
+    <meta name="description" content="The completed Great Questions AI solution architecture." />
     <title>Architecture · Great Questions AI</title>
     <style>
       :root {
@@ -183,7 +183,7 @@ const page = String.raw`<!doctype html>
           <div class="eyebrow">Evidence in · better questions out</div>
           <h1>A point of view you can trace.</h1>
           <p class="lede">Podcast transcripts become dated, searchable evidence. Mastra agents retrieve it, compare it with current research, and show the receipts.</p>
-          <div class="live-line"><i class="pulse"></i><span id="live">Checking the live evidence store…</span></div>
+          <div class="live-line"><i class="pulse"></i><span id="live">Research complete · static artifact ready</span></div>
         </div>
         <aside class="qr-card" aria-label="DAMA LA Podcast QR code">
           <a href="${damaLaPodcastUrl}" target="_blank" rel="noreferrer" aria-label="Open the DAMA LA Podcast playlist">${damaLaQrSvg}</a>
@@ -191,9 +191,9 @@ const page = String.raw`<!doctype html>
         </aside>
       </section>
 
-      <section class="summary" aria-label="Live system summary">
-        <div class="metric"><b>25</b><span id="corpus-state">6 live · 19 ingestion-ready</span></div>
-        <div class="metric"><b id="memory-count">—</b><span>Searchable memories</span></div>
+      <section class="summary" aria-label="Completed project summary">
+        <div class="metric"><b>25</b><span id="corpus-state">Podcast episodes studied</span></div>
+        <div class="metric"><b id="memory-count">579</b><span>Evidence memories</span></div>
         <div class="metric"><b>4</b><span>Mastra agents</span></div>
         <div class="metric"><b>3</b><span>Purpose-built experiences</span></div>
       </section>
@@ -204,7 +204,7 @@ const page = String.raw`<!doctype html>
           <p>The raw transcript stays local. Only validated chunks are written to the Elasticsearch alias, and every answer retains its episode, URL, and timestamp.</p>
         </div>
         <div class="pipeline">
-          <article class="stage sources"><span class="number">01 · COLLECT</span><h3>Sources</h3><p>Private and public evidence enter separate lanes.</p><ul><li>DAMA LA <span>6 episodes</span></li><li>Agentic Mesh <span id="mesh-state">19 ready</span></li><li>Guest profile <span>PDF / TXT</span></li><li>Industry web <span>public</span></li></ul></article>
+          <article class="stage sources"><span class="number">01 · COLLECT</span><h3>Sources</h3><p>Private and public evidence enter separate lanes.</p><ul><li>DAMA LA <span>6 episodes</span></li><li>Agentic Mesh <span id="mesh-state">19 indexed</span></li><li>Guest profile <span>PDF / TXT</span></li><li>Industry web <span>public</span></li></ul></article>
           <div class="connector" aria-hidden="true">→</div>
           <article class="stage shape"><span class="number">02 · SHAPE</span><h3>Provenance</h3><p>Normalize without losing the source.</p><ul><li>Timestamped chunks</li><li>Episode metadata</li><li>Deterministic IDs</li><li>Approval-bound writes</li></ul></article>
           <div class="connector" aria-hidden="true">→</div>
@@ -216,8 +216,8 @@ const page = String.raw`<!doctype html>
         </div>
 
         <div class="memory-model">
-          <article class="model-card active"><small>Live now</small><h3>Transcript memory</h3><p>Timestamped episode chunks are searchable through the memory alias. Answers link back to the recording.</p></article>
-          <article class="model-card future"><small>Deliberate next layer</small><h3>Relations + decisions</h3><p id="future-copy">The indexes exist, but remain empty until claims and changes can be adjudicated without inventing certainty.</p></article>
+          <article class="model-card active"><small>Completed source layer</small><h3>Transcript memory</h3><p>Timestamped episode chunks were searched through the memory alias. Published receipts still link back to the recording.</p></article>
+          <article class="model-card future"><small>Deliberate next layer</small><h3>Relations + decisions</h3><p id="future-copy">Temporal relations remain a follow-on: the published story uses only manually reviewed, timestamped evidence.</p></article>
         </div>
       </section>
 
@@ -239,21 +239,6 @@ const page = String.raw`<!doctype html>
 
       <footer>Great Questions AI · Mastra orchestration · Elasticsearch evidence memory</footer>
     </main>
-    <script>
-      fetch("/great-questions/api/status").then(function (response) {
-        if (!response.ok) throw new Error("status");
-        return response.json();
-      }).then(function (data) {
-        var meshLoaded = Number(data.memories) >= 579;
-        document.getElementById("memory-count").textContent = String(data.memories);
-        document.getElementById("corpus-state").textContent = meshLoaded ? "25 podcast episodes searchable" : "6 live · 19 ingestion-ready";
-        document.getElementById("mesh-state").textContent = meshLoaded ? "19 searchable" : "19 ready";
-        document.getElementById("live").textContent = "Elasticsearch connected · " + data.memories + " memories";
-        document.getElementById("future-copy").textContent = data.relations + " relations · " + data.decisions + " decisions. Structured evolution remains evidence-gated.";
-      }).catch(function () {
-        document.getElementById("live").textContent = "Architecture available · live corpus status unavailable";
-      });
-    </script>
   </body>
 </html>`;
 
@@ -261,6 +246,6 @@ export const architectureUiRoutes = [
   registerApiRoute("/architecture", {
     method: "GET",
     requiresAuth: false,
-    handler: (context: ContextWithMastra) => context.html(page),
+    handler: (context: ContextWithMastra) => context.html(architecturePage),
   }),
 ];

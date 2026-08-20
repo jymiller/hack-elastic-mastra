@@ -240,7 +240,7 @@ export const memoryEvolutionDemoPage = String.raw`<!doctype html>
           <p class="dek">The publishable artifact produced by tonight’s research process: a click-through story of how one idea moved from context windows to a governed system of working, shared, episodic, and enterprise memory.</p>
           <aside class="provenance"><strong>Read this honestly</strong><p>This is an editorial synthesis of co-hosted discussions. Agentic Mesh auto-captions do not reliably identify whether John Miller or Eric Broda spoke each passage.</p></aside>
         </div>
-        <div class="hero-stats"><span><i></i><span id="live-copy">25 episodes indexed</span></span><span>6 conceptual shifts</span><span>${receiptCount} timestamped receipts</span><span>No AI required to view</span></div>
+        <div class="hero-stats"><span><i></i><span id="live-copy">579 evidence memories distilled</span></span><span>6 conceptual shifts</span><span>${receiptCount} timestamped receipts</span><span>No AI required to view</span></div>
         <div class="framing">
           <article class="frame then"><b>What did I think?</b><h2>Memory made agents stateful.</h2><p>It let long-running, distributed work survive pauses, failures, and handoffs.</p></article>
           <article class="frame changed"><b>What changed?</b><h2>Recall became governed context.</h2><p>Selection, policy, provenance, identity, and process recovery became part of the definition.</p></article>
@@ -300,9 +300,6 @@ export const memoryEvolutionDemoPage = String.raw`<!doctype html>
           }, { rootMargin: "-20% 0px -58% 0px", threshold: [0, .2, .5] });
           chapters.forEach(function (chapter) { observer.observe(chapter); });
         }
-        fetch("/great-questions/api/status").then(function (response) { if (!response.ok) throw new Error("status"); return response.json(); }).then(function (data) {
-          document.getElementById("live-copy").textContent = data.memories + " evidence memories indexed";
-        }).catch(function () { document.getElementById("live-copy").textContent = "25 episodes indexed"; });
       })();
     </script>
   </body>

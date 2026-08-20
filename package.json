@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "mastra dev",
     "build": "mastra build",
+    "build:static": "node --import tsx scripts/build-static-site.ts",
     "start": "mastra start",
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test tests/*.test.ts",

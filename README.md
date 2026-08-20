@@ -29,6 +29,34 @@ The application deliberately separates the **research process** from its
 The canonical project concept is preserved verbatim in
 [PROJECT-BRIEF.txt](PROJECT-BRIEF.txt).
 
+## Public static edition
+
+The supported public deployment is now a static site. It publishes the durable
+Memory Story and an explanation of the completed hackathon process without
+running Mastra, Elasticsearch, model providers, uploads, traces, or API routes.
+
+```bash
+npm ci
+npm run build:static
+```
+
+The build writes three real HTML pages to `dist-static/`:
+
+| Public page | Path |
+| --- | --- |
+| Memory Story | `/` |
+| How it worked | `/how-it-worked/` |
+| Architecture | `/architecture/` |
+
+The generated files contain no `fetch`, XHR, WebSocket, `/api/`, or `/agents`
+capability. Render's Content Security Policy additionally sets
+`connect-src 'none'` and `form-action 'none'`.
+
+The repository includes [render.yaml](render.yaml). In Render, create a new
+Blueprint from this repository and use the `main` branch. No environment
+variables or secrets are required. Render runs `npm ci && npm run build:static`
+and publishes `dist-static` to its global CDN.
+
 ## How it works
 
 ### 1. Research across time
@@ -106,7 +134,11 @@ Mastra Studio provides local chat, persistent conversation memory, evaluation,
 and traces. OpenRouter is the primary model route; Novita GLM-5.3 is available
 as a fallback. LibSQL persists local threads, notebooks, and trace data.
 
-## Run locally
+## Original research workshop — local only
+
+The original agentic application remains in the repository as the documented
+editorial process that produced the static story. It is optional and should not
+be deployed as the public site.
 
 Requirements: Node.js 22.13 or newer.
 
