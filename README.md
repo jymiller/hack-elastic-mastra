@@ -5,7 +5,8 @@
 Great Questions AI remembers not only what you said, but how your thinking
 changed—and uses that sourced history to discover what you should ask next.
 
-[View the Devpost submission](https://devpost.com/software/great-questions-ai)
+[Open the public Memory Story](https://great-questions-ai.onrender.com)
+· [View the Devpost submission](https://devpost.com/software/great-questions-ai)
 · [Watch the video walkthrough](https://youtu.be/mRkD1FRksxg)
 
 ![Great Questions AI Memory Story](docs/screenshots/memory-story.jpg)
@@ -34,6 +35,8 @@ The canonical project concept is preserved verbatim in
 The supported public deployment is now a static site. It publishes the durable
 Memory Story and an explanation of the completed hackathon process without
 running Mastra, Elasticsearch, model providers, uploads, traces, or API routes.
+
+**Live:** [great-questions-ai.onrender.com](https://great-questions-ai.onrender.com)
 
 ```bash
 npm ci
