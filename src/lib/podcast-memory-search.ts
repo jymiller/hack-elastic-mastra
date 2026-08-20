@@ -6,9 +6,11 @@ import type { PodcastMemoryDocument } from "./podcast-corpus.js";
 export interface PodcastMemoryHit {
   memory_id: string;
   text: string;
+  people: string[];
   source: {
     title: string;
     url: string;
+    image_url?: string;
     date: string;
     locator: string;
   };
@@ -23,11 +25,78 @@ export interface PodcastMemorySearchResult {
 const sourceFields = [
   "memory_id",
   "statement",
+  "people",
   "source.title",
   "source.url",
   "source.published_at",
   "source.locator",
 ] as const;
+
+function timestampToSeconds(timestamp: string): number | undefined {
+  const parts = timestamp.split(":").map(Number);
+  if (
+    (parts.length !== 2 && parts.length !== 3) ||
+    parts.some((part) => !Number.isInteger(part) || part < 0)
+  ) {
+    return undefined;
+  }
+
+  if (parts.length === 2) {
+    const [minutes, seconds] = parts;
+    return seconds < 60 ? minutes * 60 + seconds : undefined;
+  }
+
+  const [hours, minutes, seconds] = parts;
+  return minutes < 60 && seconds < 60
+    ? hours * 3600 + minutes * 60 + seconds
+    : undefined;
+}
+
+export function timestampedPodcastUrl(url: string, locator: string): string {
+  const startTimestamp = /^Transcript\s+(\d+(?::\d{1,2})?:\d{2})/.exec(
+    locator,
+  )?.[1];
+  const startSeconds = startTimestamp
+    ? timestampToSeconds(startTimestamp)
+    : undefined;
+
+  if (startSeconds === undefined) return url;
+
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase();
+    const isYoutube =
+      host === "youtu.be" ||
+      host === "youtube.com" ||
+      host.endsWith(".youtube.com");
+
+    if (!isYoutube) return url;
+
+    parsed.searchParams.set("t", `${startSeconds}s`);
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
+export function youtubeThumbnailUrl(url: string): string | undefined {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase();
+    const videoId =
+      host === "youtu.be"
+        ? parsed.pathname.split("/").filter(Boolean)[0]
+        : host === "youtube.com" || host.endsWith(".youtube.com")
+          ? parsed.searchParams.get("v") ?? undefined
+          : undefined;
+
+    return videoId && /^[A-Za-z0-9_-]{6,20}$/.test(videoId)
+      ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 function lexicalQuery(query: string): estypes.QueryDslQueryContainer {
   return {
@@ -107,9 +176,14 @@ function mapPodcastHits(
       {
         memory_id: document.memory_id,
         text: document.statement,
+        people: document.people ?? [],
         source: {
           title: document.source.title,
-          url: document.source.url,
+          url: timestampedPodcastUrl(
+            document.source.url,
+            document.source.locator,
+          ),
+          image_url: youtubeThumbnailUrl(document.source.url),
           date: document.source.published_at,
           locator: document.source.locator,
         },

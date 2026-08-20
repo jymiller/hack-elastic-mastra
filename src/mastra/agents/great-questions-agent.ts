@@ -1,9 +1,12 @@
 import { Agent } from "@mastra/core/agent";
+import { Memory } from "@mastra/memory";
 
-import { optionalEnv } from "../../lib/env.js";
+import { conversationalModel } from "../../lib/model-fallback.js";
 import { loadElasticMcpTools } from "../mcp/elastic-client.js";
 import { elasticConnectivityTool } from "../tools/elastic-connectivity.js";
 import { podcastMemorySearchTool } from "../tools/podcast-memory-search.js";
+import { industryResearchAgent } from "./industry-research-agent.js";
+import { podcastPrepAgent } from "./podcast-prep-agent.js";
 
 const elasticMcpTools = await loadElasticMcpTools();
 
@@ -20,10 +23,17 @@ For every question about the podcast, its guests, John's prior thinking, or
 themes across episodes, call podcast-memory-search before answering. Search
 again with a narrower query when the first evidence is insufficient.
 
-Base factual claims only on retrieved transcript excerpts. Cite the source
-title, date, transcript locator, and URL. The current captions identify speaker
+Base factual claims about podcast content only on retrieved transcript excerpts.
+Cite the source title, date, transcript locator, and URL. The current captions identify speaker
 turns imperfectly, so never attribute a sentence to John or a guest unless the
 excerpt itself makes the speaker clear; state uncertainty when it does not.
+
+For current public industry, company, product, standards, academic, regulatory,
+or named-person research, delegate to industryResearchAgent. Keep its public web
+evidence visibly separate from private podcast evidence and preserve its links,
+evidence grades, conflicts, and uncertainty. For interview preparation, delegate
+to podcastPrepAgent so it can combine public guest research with sourced podcast
+memory without grading subjective points of view as right or wrong.
 
 Distinguish historical belief from current belief. Treat every claimed change
 as an evidence question: cite the governing memory IDs, preserve superseded
@@ -31,12 +41,19 @@ ideas, and say when the available memory does not prove a change. For "what's
 next" questions, separate source-grounded observations from your proposed
 questions. Prefer useful next questions over generic summaries.
   `.trim(),
-  model:
-    optionalEnv("OPENROUTER_MODEL") ??
-    "openrouter/anthropic/claude-haiku-4.5",
+  model: conversationalModel(),
+  memory: new Memory({
+    options: {
+      lastMessages: 20,
+    },
+  }),
   tools: {
     elasticConnectivityTool,
     podcastMemorySearchTool,
     ...elasticMcpTools,
+  },
+  agents: {
+    industryResearchAgent,
+    podcastPrepAgent,
   },
 });

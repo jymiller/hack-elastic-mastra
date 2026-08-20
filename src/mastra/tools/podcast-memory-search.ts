@@ -18,9 +18,11 @@ export const podcastMemorySearchTool = createTool({
       z.object({
         memory_id: z.string(),
         text: z.string(),
+        people: z.array(z.string()),
         source: z.object({
           title: z.string(),
           url: z.string(),
+          image_url: z.string().url().optional(),
           date: z.string(),
           locator: z.string(),
         }),
