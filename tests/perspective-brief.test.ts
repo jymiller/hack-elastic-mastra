@@ -50,6 +50,7 @@ test("formats the structured brief into durable conversation context", () => {
 
   assert.match(context, /John's sourced point of view/);
   assert.match(context, /Guest A/);
+  assert.match(context, /Other participant perspectives/);
   assert.match(context, /Evolution over time — mixed/);
   assert.match(context, /memory-2/);
 });

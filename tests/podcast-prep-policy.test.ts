@@ -11,12 +11,12 @@ import {
 } from "../src/mastra/agents/podcast-prep-policy.js";
 
 test("defines a generic guest-prep supervisor with a useful default use case", () => {
-  assert.equal(PODCAST_PREP_DEFAULT_GUEST, "Kevin Lucier");
+  assert.equal(PODCAST_PREP_DEFAULT_GUEST, "Next Guest");
   assert.match(PODCAST_PREP_AGENT_DESCRIPTION, /Supervisor/i);
   assert.match(PODCAST_PREP_AGENT_DESCRIPTION, /industryResearchAgent/);
   assert.match(PODCAST_PREP_AGENT_DESCRIPTION, /podcastMemorySearchTool/);
   assert.match(PODCAST_PREP_AGENT_INSTRUCTIONS, /NAMED upcoming guest/);
-  assert.match(PODCAST_PREP_AGENT_INSTRUCTIONS, /different guest/);
+  assert.match(PODCAST_PREP_AGENT_INSTRUCTIONS, /real name only/);
 });
 
 test("requires the complete prep brief in a stable order", () => {

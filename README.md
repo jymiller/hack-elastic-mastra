@@ -1,62 +1,112 @@
 # Great Questions AI
 
-Great Questions AI is a living research brain that remembers not just what you
-thought, but how your thinking changed—and uses that memory to discover what
-you should ask next.
+**Evidence memory for better questions.**
+
+Great Questions AI remembers not only what you said, but how your thinking
+changed—and uses that sourced history to discover what you should ask next.
+
+[View the Devpost submission](https://devpost.com/software/great-questions-ai)
+· [Watch the video walkthrough](https://youtu.be/mRkD1FRksxg)
+
+![Great Questions AI Memory Story](docs/screenshots/memory-story.jpg)
+
+## The idea
+
+Podcast conversations contain valuable ideas, but they are difficult to recover,
+compare, or follow through time. Great Questions AI turns timestamped transcripts
+into attributable Elasticsearch memories, uses Mastra agents to research them,
+and preserves the result as a source-linked story.
+
+The application deliberately separates the **research process** from its
+**durable output**:
+
+1. Ask what you previously thought.
+2. Retrieve the exact podcast evidence.
+3. Compare perspectives and identify supported change.
+4. Turn unresolved tensions into better interview questions.
+5. Publish the sourced narrative without needing to keep the AI runtime online.
 
 The canonical project concept is preserved verbatim in
-[PROJECT-BRIEF.txt](./PROJECT-BRIEF.txt).
+[PROJECT-BRIEF.txt](PROJECT-BRIEF.txt).
 
-## What is in the app
+## How it works
 
-The working prototype now provides:
+### 1. Research across time
 
-- a custom research workshop at `/great-questions` with named local notebooks,
-  question-specific saved evidence sets, structured perspective briefs, episode
-  thumbnails, and timestamped YouTube evidence;
-- a podcast-prep workspace at `/podcast-prep` with PDF/text profile upload,
-  public/private evidence lanes, precomputed Kevin Lucier demo questions, and
-  optional Andrej Karpathy comparison framing;
-- a publishable Memory Story at `/demo` that distills the hackathon research
-  into six evidence-backed shifts in John's thinking, a John × Andrej Karpathy
-  comparison, and the questions that come next;
-- a high-level system map at `/architecture`;
-- persistent local conversation memory and traces backed by LibSQL;
-- OpenRouter as the primary model route with an optional Novita GLM-5.3
-  fallback;
-- four registered Mastra agents: Great Questions, Podcast Prep, Definitive
-  Industry Research, and the approval-gated Agentic Mesh Ingestion Agent;
-- an MCP server exposing the agents, Elasticsearch connectivity, podcast search,
-  and guarded Agentic Mesh ingestion tools;
-- optional MCP client connectivity to Elastic Agent Builder;
-- direct, server-side Elasticsearch connectivity;
-- hybrid lexical and semantic podcast-memory search with RRF;
-- timestamped source citations back to the original episode;
-- an idempotent, review-before-running Elasticsearch index setup and ingestion path.
+The Research workshop searches 579 transcript memories across 25 podcast
+episodes. Elasticsearch combines lexical and semantic retrieval with RRF. Every
+result retains its episode, timestamp, and memory ID.
 
-The live corpus contains 25 podcast episodes as 579 searchable transcript
-memories: six DAMA LA episodes produce 159 chunks, and 19 Agentic Mesh episodes
-produce 420 chunks. The Agentic Mesh write was executed through the guarded
-ingestion path after its exact alias, operation shape, and plan hash were
-approved. Raw transcripts, generated data, local databases, and credentials are
-never committed.
+Each submitted question keeps its own Evidence Trail, so returning to a prior
+question restores the passages that grounded that answer.
 
-## Memory model
+![Question-specific research and evidence](docs/screenshots/research-workshop.jpg)
 
-The first proposal is graph-shaped without requiring a separate graph database:
+### 2. Prepare a grounded interview
 
-- `<prefix>-memories-v1` stores sourced claims, ideas, questions, and
-  predictions as nodes.
-- `<prefix>-relations-v1` stores explicit directed edges such as
-  `SUPERSEDES`, `CONTRADICTS`, `SUPPORTS`, and `REFINES`.
-- `<prefix>-decisions-v1` stores receipts showing which memory IDs governed an
-  answer or generated question.
+Podcast Prep combines a guest profile with the host's sourced point of view. It
+separates public guest research from private podcast evidence, exposes productive
+tensions, and generates open-ended, premise-bearing, and follow-up questions.
 
-The original memory node remains queryable after a later node supersedes it.
-An `is_current` projection makes current-belief retrieval fast, while the edge
-record preserves why and when the change occurred.
+![Podcast preparation workspace](docs/screenshots/podcast-prep.jpg)
 
-## Local setup
+### 3. Produce a durable Memory Story
+
+The Memory Story is the output of the hackathon research process: six
+evidence-backed shifts in John's thinking about agent memory, ten timestamped
+receipts, an Andrej Karpathy comparison, and the questions that come next.
+
+It is precomputed and source-linked. The AI workshop can be turned off while the
+story remains available as a publishable artifact.
+
+![Evidence-backed evolution of an idea](docs/screenshots/memory-story.jpg)
+
+### 4. Keep the system explainable
+
+The Architecture page shows the path from raw sources to validated memories,
+hybrid retrieval, specialist agents, and purpose-built experiences.
+
+![Great Questions AI solution architecture](docs/screenshots/architecture.jpg)
+
+## Solution architecture
+
+```text
+Podcast transcripts + guest profiles + public research
+                         ↓
+      provenance, timestamps, deterministic IDs
+                         ↓
+          Elasticsearch hybrid memory search
+                         ↓
+          Mastra supervisors and specialists
+                         ↓
+       Research · Podcast Prep · Memory Story
+```
+
+### Evidence layer
+
+- **25 episodes:** six DAMA LA episodes and 19 Agentic Mesh episodes.
+- **579 memories:** 159 DAMA LA chunks and 420 Agentic Mesh chunks.
+- **Accurate roles:** John Miller is the sole DAMA LA host; Eric Broda and John
+  Miller are Agentic Mesh co-hosts. Evidence cards preserve that distinction.
+- **Hybrid retrieval:** BM25, `semantic_text`, metadata filters, and RRF.
+- **Receipts:** episode URL, exact timestamp, source metadata, and stable memory
+  ID remain attached to every retrieved passage.
+
+### Agent layer
+
+- **Great Questions Agent** retrieves historical evidence and separates
+  viewpoints.
+- **Podcast Prep Agent** combines guest research with the host's sourced thesis.
+- **Industry Research Agent** investigates current public sources with citations
+  and uncertainty.
+- **Agentic Mesh Ingestion Agent** validates a corpus and can write only an
+  explicitly approved plan.
+
+Mastra Studio provides local chat, persistent conversation memory, evaluation,
+and traces. OpenRouter is the primary model route; Novita GLM-5.3 is available
+as a fallback. LibSQL persists local threads, notebooks, and trace data.
+
+## Run locally
 
 Requirements: Node.js 22.13 or newer.
 
@@ -64,25 +114,26 @@ Requirements: Node.js 22.13 or newer.
 cp .env.example .env
 npm install
 npm run typecheck
+npm test
 npm run dev
 ```
 
-Fill `.env` locally. Never commit it. The Mastra development server and Studio
-run at `http://localhost:4111`.
+Add credentials only to the local `.env`; never commit them. The Mastra server
+and Studio run at `http://localhost:4111`.
 
-Useful local routes:
-
-- `http://localhost:4111/great-questions` — research memory;
-- `http://localhost:4111/podcast-prep` — interview preparation;
-- `http://localhost:4111/demo` — the publishable, evidence-backed Memory Story;
-- `http://localhost:4111/architecture` — solution architecture;
-- `http://localhost:4111/agents` — Mastra Studio agents and traces.
+| Experience | Local URL |
+| --- | --- |
+| Research workshop | `http://localhost:4111/great-questions` |
+| Podcast Prep | `http://localhost:4111/podcast-prep` |
+| Memory Story | `http://localhost:4111/demo` |
+| Architecture | `http://localhost:4111/architecture` |
+| Mastra Studio | `http://localhost:4111/agents` |
 
 The custom routes are an unauthenticated local-demo surface. Add authentication
-and deployment-specific access controls before exposing them to the public
-internet.
+and deployment-specific access controls before exposing the interactive app to
+the public internet.
 
-## Connectivity checks
+## Elasticsearch setup and ingestion
 
 After adding the Elasticsearch endpoint and API key to `.env`:
 
@@ -91,58 +142,62 @@ npm run check:elastic
 npm run inspect:elastic
 ```
 
-Review [docs/ELASTIC-MEMORY-MODEL.md](./docs/ELASTIC-MEMORY-MODEL.md), then
-create the empty indices when ready:
+Review [the Elastic memory model](docs/ELASTIC-MEMORY-MODEL.md), then create
+the empty indices when ready:
 
 ```bash
 npm run setup:elastic
 ```
 
-The setup command creates mappings only. After reviewing the target alias and
-bulk operation, ingest the local DAMA LA transcripts with:
+After reviewing the exact target alias and Bulk operation, ingest the local DAMA
+LA transcripts with:
 
 ```bash
 npm run ingest:podcast
 ```
 
-Ask the agent directly from the terminal with:
+Ask the agent directly from the terminal:
 
 ```bash
 npm run ask -- "What did these guests say about agent memory?"
 ```
 
+The Agentic Mesh ingestion agent uses a stricter write gate. It first validates
+the ignored local corpus and produces a transcript-free SHA-256 plan. A later
+write must provide that exact approved plan hash. Writes use the
+`great-questions-memories` alias with `require_alias=true`, `refresh=wait_for`,
+bounded batches, a five-minute request timeout, and item-level failure handling.
+
 ## API and MCP
 
-With `npm run dev` running:
+With the development server running:
 
 - Mastra REST routes are available under `/api`.
-- The agents are registered as `greatQuestionsAgent`, `podcastPrepAgent`,
+- Swagger UI is available at `/swagger-ui`.
+- The registered agents are `greatQuestionsAgent`, `podcastPrepAgent`,
   `industryResearchAgent`, and `agenticMeshIngestionAgent`.
-- The local MCP server is registered as `great-questions`.
-- Swagger UI is available at `/swagger-ui` in development.
+- The local `great-questions` MCP server exposes the agents, Elasticsearch
+  connectivity, podcast search, and guarded ingestion tools.
+- Optional `ELASTIC_MCP_URL` and a separate least-privilege
+  `ELASTIC_MCP_API_KEY` connect Elastic Agent Builder without affecting direct
+  Elasticsearch search.
 
-For Elastic's hosted Agent Builder MCP server, set `ELASTIC_MCP_URL` and a
-separate least-privilege `ELASTIC_MCP_API_KEY`. If those variables are absent,
-the local Mastra server still starts and uses direct Elasticsearch tools.
+## Repository boundaries
 
-## Agentic Mesh write gate
+- `.env`, credentials, local databases, build output, and `node_modules` are
+  excluded from Git.
+- Raw transcript and generated data directories remain excluded from Git.
+- README screenshots contain rendered UI only—no credentials or raw files.
+- Podcast captions are not diarized reliably, so uncertain speaker attribution
+  remains explicit in the product and in the Memory Story.
 
-The Agentic Mesh agent validates the ignored local corpus and returns a
-transcript-free write plan. It cannot write in that same user turn. Every future
-ingestion or transcript change must receive approval for its freshly computed
-SHA-256 plan hash. The write tool uses the `great-questions-memories` alias with
-`require_alias=true`, `refresh=wait_for`, bounded batches, a five-minute request
-timeout, and explicit partial-failure reporting.
+## Current status
 
-## Status
+The working prototype includes live hybrid retrieval, timestamped citations,
+question-specific saved result sets, persistent Mastra memory and tracing,
+model fallback, specialist-agent delegation, interview preparation, a guarded
+second-corpus ingestion workflow, and the publishable Memory Story.
 
-The current app separates the research process from its durable output.
-`/great-questions` is the live workshop: Elasticsearch retrieves attributable,
-timestamped passages and Mastra agents synthesize them. `/demo` is the
-publishable result of that process: a precomputed, source-linked narrative that
-can remain online without keeping the AI runtime active. The prototype also
-includes persistent Mastra memory and tracing, model fallback, specialist-agent
-delegation, interview preparation, and a guarded second-corpus ingestion
-workflow. Structured claim/idea/question/prediction document building is
-implemented and tested; automated claim extraction and temporal relation
-adjudication remain follow-on work.
+Structured claim, idea, question, and prediction document construction is
+implemented and tested. Automated claim extraction and evidence-gated temporal
+relation adjudication remain deliberate follow-on work.

@@ -56,14 +56,17 @@ function evidenceSuffix(ids: string[]) {
 }
 
 export function formatPerspectiveBriefForContext(brief: PerspectiveBrief) {
-  const guests = brief.guestPerspectives.length
+  // The persisted field name remains guestPerspectives for API compatibility,
+  // but it can contain a co-host or another participant when the corpus role
+  // metadata says they are not a guest.
+  const participants = brief.guestPerspectives.length
     ? brief.guestPerspectives
         .map(
           (guest) =>
             `- ${guest.name} (${guest.confidence} confidence): ${guest.summary}${evidenceSuffix(guest.evidenceIds)}`,
         )
         .join("\n")
-    : "- No distinct guest perspective could be established.";
+    : "- No distinct participant perspective could be established.";
   const moments = brief.evolution.moments.length
     ? brief.evolution.moments
         .map(
@@ -79,8 +82,8 @@ John's sourced point of view (${brief.johnPerspective.confidence} confidence):
 ${brief.johnPerspective.summary}${evidenceSuffix(brief.johnPerspective.evidenceIds)}
 Attribution note: ${brief.johnPerspective.attributionNote}
 
-Guest perspectives:
-${guests}
+Other participant perspectives:
+${participants}
 
 Evolution over time — ${brief.evolution.assessment}:
 ${brief.evolution.summary}

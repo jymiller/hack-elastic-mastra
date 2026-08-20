@@ -7,11 +7,11 @@ import {
 } from "../src/lib/observability-context.js";
 
 test("creates a stable cost-center ID from a prep workspace name", () => {
-  const expected = createPodcastPrepSessionId("Kevin Lucier interview");
+  const expected = createPodcastPrepSessionId("Next Guest interview");
 
   assert.match(expected, /^prep-[a-f0-9]{16}$/);
   assert.equal(
-    createPodcastPrepSessionId("  KEVIN   LUCIER interview  "),
+    createPodcastPrepSessionId("  NEXT   GUEST interview  "),
     expected,
   );
   assert.notEqual(
@@ -23,7 +23,7 @@ test("creates a stable cost-center ID from a prep workspace name", () => {
 test("attaches user, surface, and prep cost dimensions to a request", () => {
   const requestContext = createUiRequestContext("podcast-prep-ui", {
     sessionId: "prep-example",
-    podcastPrepName: "Kevin Lucier interview",
+    podcastPrepName: "Next Guest interview",
   });
 
   assert.equal(requestContext.get("userId"), "john-local-demo");
@@ -31,6 +31,6 @@ test("attaches user, surface, and prep cost dimensions to a request", () => {
   assert.equal(requestContext.get("sessionId"), "prep-example");
   assert.equal(
     requestContext.get("podcastPrepName"),
-    "Kevin Lucier interview",
+    "Next Guest interview",
   );
 });

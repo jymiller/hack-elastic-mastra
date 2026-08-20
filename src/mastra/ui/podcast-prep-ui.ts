@@ -179,9 +179,9 @@ const page = String.raw`<!doctype html>
         <h1>Prepare for the conversation, not the bio.</h1>
         <p class="intro">Research the guest's public work, find your relevant sourced point of view, and turn the tension into questions worth asking.</p>
         <form id="prep-form">
-          <label>Prep workspace<input id="prep-project" value="Kevin Lucier interview" required /></label>
-          <label>Upcoming guest<input id="guest" value="Kevin Lucier" required /></label>
-          <label>Identity clues<input id="context" value="CTO/CPO · fractional advisor · enterprise transformation · Hermosa Beach" placeholder="Company, role, city, profile URL, or how you know him" /></label>
+          <label>Prep workspace<input id="prep-project" value="Next Guest interview" required /></label>
+          <label>Upcoming guest<input id="guest" value="Next Guest" required /></label>
+          <label>Identity clues<input id="context" value="Technology executive · product and platform leadership · enterprise transformation" placeholder="Company, role, city, profile URL, or how you know them" /></label>
           <label>Interview focus<textarea id="focus" required placeholder="What do you most want to understand, challenge, or explore?">How enterprise AI changes platform architecture, team leadership, and the design of durable agent memory.</textarea></label>
           <label class="upload" for="profile-file">
             <span class="upload-copy"><strong>Speaker profile</strong><span id="file-status" class="file-status">LinkedIn · 7 pages · preprocessed for demo</span></span>
@@ -207,17 +207,17 @@ const page = String.raw`<!doctype html>
       <section class="report-shell">
         <div class="report-head"><h2>Interview brief</h2><span class="badge" id="status">Precomputed</span></div>
         <div id="output" class="prep-showcase">
-          <section class="guest-hero"><div class="guest-avatar">KL</div><div><h2>Kevin Lucier</h2><p>CTO/CPO · advisor · entrepreneur · 20+ years scaling digital products, commerce platforms, data systems, and high-performance technology teams.</p></div><span class="profile-ready">Profile parsed · 7 pages</span></section>
-          <section class="tension"><div class="section-label">The productive tension</div><blockquote>Kevin has spent a career making platforms survive growth. John’s thesis asks whether agent memory can survive <span>change</span> without losing its receipts.</blockquote></section>
+          <section class="guest-hero"><div class="guest-avatar">NG</div><div><h2>Next Guest</h2><p>Technology executive · product and platform leader · enterprise transformation advisor.</p></div><span class="profile-ready">Profile parsed · 7 pages</span></section>
+          <section class="tension"><div class="section-label">The productive tension</div><blockquote>The next guest has spent a career making platforms survive growth. John’s thesis asks whether agent memory can survive <span>change</span> without losing its receipts.</blockquote></section>
           <section class="question-set">
-            <div class="question-column"><h3>Open-ended · discover his frame</h3>
+            <div class="question-column"><h3>Open-ended · discover their frame</h3>
               <article class="question"><i>01</i><div><b>You’ve scaled platforms through several generations of technology. What breaks first when AI moves from an assistant to an operating layer?</b><span>Listen for: architecture, ownership, and organizational failure modes.</span></div></article>
               <article class="question"><i>02</i><div><b>When CEOs ask you for an AI strategy, which “AI problems” usually turn out to be data, product, or leadership problems?</b><span>Follow with one concrete engagement and the decision that changed.</span></div></article>
-              <article class="question"><i>03</i><div><b>Across Beautycounter, TruConnect, and your fractional work, which architecture decision aged best—and which looked smart at the time but hurt later?</b><span>Creates a dated before/after story rather than a biography recap.</span></div></article>
-              <article class="question"><i>04</i><div><b>How do you build a high-performance team when agents become persistent collaborators instead of disposable tools?</b><span>Connects Kevin’s team leadership to the agentic future.</span></div></article>
+              <article class="question"><i>03</i><div><b>Across your leadership and advisory work, which architecture decision aged best—and which looked smart at the time but hurt later?</b><span>Creates a dated before/after story rather than a biography recap.</span></div></article>
+              <article class="question"><i>04</i><div><b>How do you build a high-performance team when agents become persistent collaborators instead of disposable tools?</b><span>Connects the guest’s team leadership to the agentic future.</span></div></article>
             </div>
             <div class="question-column premise"><h3>Premise-bearing · invite disagreement</h3>
-              <article class="question"><i>05</i><div><b>My thesis is that enterprise memory needs dated beliefs, sources, and visible uncertainty—not just more context. Where does that thesis fail in a real operating system?</b><span>John’s position is explicit; Kevin gets a clean opening to challenge it.</span></div></article>
+              <article class="question"><i>05</i><div><b>My thesis is that enterprise memory needs dated beliefs, sources, and visible uncertainty—not just more context. Where does that thesis fail in a real operating system?</b><span>John’s position is explicit; the guest gets a clean opening to challenge it.</span></div></article>
               <article class="question"><i>06</i><div><b>If recency changes what an agent retrieves, should a business agent be allowed to “forget”—or is time decay dangerous around policy and accountability?</b><span>Separates personalization from institutional memory.</span></div></article>
               <article class="question"><i>07</i><div><b>If an agent can remember every historical decision, does that make the enterprise more accountable—or trap it inside its legacy?</b><span>Push toward governance, supersession, and deliberate forgetting.</span></div></article>
               <article class="question"><i>08</i><div><b>Karpathy’s software framing is powerful, but what does it miss about operating an enterprise platform with customers, auditors, and revenue on the line?</b><span>Use Andrej as a comparison lens, not a correctness authority.</span></div></article>
@@ -230,7 +230,7 @@ const page = String.raw`<!doctype html>
     </main>
     <script>
       (function () {
-        var stateKey = "great-questions:podcast-prep:v1";
+        var stateKey = "great-questions:podcast-prep:v2";
         var form = document.getElementById("prep-form");
         var run = document.getElementById("run");
         var output = document.getElementById("output");
@@ -313,8 +313,8 @@ const page = String.raw`<!doctype html>
             var saved = JSON.parse(localStorage.getItem(stateKey) || "null");
             if (!saved) return;
             if (saved.form) {
-              document.getElementById("prep-project").value = saved.form.prepProject || "Kevin Lucier interview";
-              document.getElementById("guest").value = saved.form.guest || "Kevin Lucier";
+              document.getElementById("prep-project").value = saved.form.prepProject || "Next Guest interview";
+              document.getElementById("guest").value = saved.form.guest || "Next Guest";
               document.getElementById("context").value = saved.form.context || "";
               document.getElementById("focus").value = saved.form.focus || "";
               document.getElementById("benchmark").value = saved.form.benchmark || "";

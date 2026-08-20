@@ -9,7 +9,7 @@ export const PODCAST_PREP_OUTPUT_SECTIONS = Object.freeze([
   "Uncertainties and research gaps",
 ] as const);
 
-export const PODCAST_PREP_DEFAULT_GUEST = "Kevin Lucier";
+export const PODCAST_PREP_DEFAULT_GUEST = "Next Guest";
 
 export const ANDREJ_KARPATHY_BENCHMARK_GUIDANCE = `
 When the user selects Andrej Karpathy as an industry benchmark, delegate a
@@ -76,8 +76,8 @@ point of view is correct.
 
 export const PODCAST_PREP_AGENT_INSTRUCTIONS = `
 You are the Podcast Prep supervisor for Great Questions AI. Prepare John Miller
-to interview a NAMED upcoming guest. The common first use case is Kevin Lucier,
-but never assume that name when the user supplies a different guest.
+to interview a NAMED upcoming guest. "Next Guest" is only the neutral UI
+placeholder; use the person's real name only when the user supplies it.
 
 DIVISION OF LABOR
 

@@ -557,7 +557,7 @@ const page = String.raw`<!doctype html>
           </div>
 
           <div class="starters" aria-label="Question starters">
-            <button class="starter" data-prompt="What did the podcast guests think about agent memory? Cite the episodes and timestamps, and be explicit about uncertain speaker attribution.">
+            <button class="starter" data-prompt="What did the podcast participants think about agent memory? Cite the episodes and timestamps, preserve host, co-host, and guest roles, and be explicit about uncertain speaker attribution.">
               <b>What did I think?</b><span>Recover an earlier position in its original context.</span>
             </button>
             <button class="starter" data-prompt="How did the discussion of agent memory change across these podcast episodes? Only claim a change when the retrieved evidence supports it, and cite every source.">
@@ -619,8 +619,14 @@ const page = String.raw`<!doctype html>
             .replace(/'/g, "&#039;");
         }
 
+        function normalizeRoleLanguage(value) {
+          return String(value)
+            .replace(/\bguest\s+Eric Broda\b/gi, "Agentic Mesh co-host Eric Broda")
+            .replace(/\bEric Broda\s+was\s+a\s+guest\b/gi, "Eric Broda was an Agentic Mesh co-host");
+        }
+
         function renderAnswer(value) {
-          var safe = escapeHtml(value);
+          var safe = escapeHtml(normalizeRoleLanguage(value));
           safe = safe.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1 ↗</a>');
           safe = safe.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
           return safe.replace(/\n/g, "<br />");
@@ -761,11 +767,11 @@ const page = String.raw`<!doctype html>
             traceLink.setAttribute("aria-label", "Inspect this perspective trace in Mastra Studio");
             label.appendChild(traceLink);
           }
-          var guests = Array.isArray(brief.guestPerspectives) && brief.guestPerspectives.length
+          var participants = Array.isArray(brief.guestPerspectives) && brief.guestPerspectives.length
             ? brief.guestPerspectives.map(function (guest) {
                 return '<article class="perspective-card"><div class="perspective-title"><h3>' + escapeHtml(guest.name) + '</h3><span class="confidence">' + escapeHtml(guest.confidence) + ' confidence</span></div><div class="perspective-summary">' + renderAnswer(guest.summary) + '</div>' + renderRefs(guest.evidenceIds) + '</article>';
               }).join("")
-            : '<article class="perspective-card"><div class="perspective-summary">No distinct guest perspective could be established from the retrieved evidence.</div></article>';
+            : '<article class="perspective-card"><div class="perspective-summary">No distinct participant perspective could be established from the retrieved evidence.</div></article>';
           var moments = Array.isArray(brief.evolution.moments) && brief.evolution.moments.length
             ? '<div class="timeline">' + brief.evolution.moments.map(function (moment) {
                 return '<article class="moment"><time>' + escapeHtml(moment.date) + '</time><b>' + escapeHtml(moment.label) + '</b><p>' + renderAnswer(moment.summary) + '</p>' + renderRefs(moment.evidenceIds) + '</article>';
@@ -778,9 +784,9 @@ const page = String.raw`<!doctype html>
           body.className = "perspective-brief";
           body.innerHTML =
             '<div class="brief-kicker">One query · three viewpoints</div>' +
-            '<h2 class="brief-headline">' + escapeHtml(brief.headline) + '</h2>' +
+            '<h2 class="brief-headline">' + escapeHtml(normalizeRoleLanguage(brief.headline)) + '</h2>' +
             '<article class="perspective-card john"><div class="perspective-title"><h3>Your sourced point of view</h3><span class="confidence">' + escapeHtml(brief.johnPerspective.confidence) + ' confidence</span></div><div class="perspective-summary">' + renderAnswer(brief.johnPerspective.summary) + '</div><div class="attribution">' + escapeHtml(brief.johnPerspective.attributionNote) + '</div>' + renderRefs(brief.johnPerspective.evidenceIds) + '</article>' +
-            '<div class="guest-heading">Guest perspectives</div><div class="guest-grid">' + guests + '</div>' +
+            '<div class="guest-heading">Other participant perspectives</div><div class="guest-grid">' + participants + '</div>' +
             '<div class="evolution-heading">Evolution over time</div><section class="evolution-card"><div class="perspective-title"><h3>' + escapeHtml(brief.evolution.assessment) + '</h3><span class="confidence">dated evidence</span></div><div class="evolution-summary">' + renderAnswer(brief.evolution.summary) + '</div>' + moments + '</section>' +
             '<div class="brief-foot"><div><b>Uncertainty</b>' + uncertainties + '</div><div class="next-question"><b>Ask next</b>' + escapeHtml(brief.nextQuestion) + '</div></div>';
           wrapper.appendChild(label);
@@ -898,18 +904,30 @@ const page = String.raw`<!doctype html>
             return;
           }
           evidenceCount.textContent = payload.hits.length + " relevant transcript passages. Click any one to open its exact timestamp.";
+          function roleLine(hit) {
+            var names = Array.isArray(hit.people) ? hit.people.filter(Boolean) : [];
+            if (String(hit.memory_id || "").indexOf("agentic-mesh:") === 0) {
+              var cohosts = ["Eric Broda", "John Miller"].filter(function (name) { return names.indexOf(name) >= 0; });
+              var additional = names.filter(function (name) { return cohosts.indexOf(name) < 0; });
+              var meshLine = cohosts.length ? "Co-hosts " + cohosts.join(" · ") : "Agentic Mesh participants";
+              return additional.length ? meshLine + " · With " + additional.join(" · ") : meshLine;
+            }
+            if (String(hit.memory_id || "").indexOf("podcast:") === 0) {
+              var damaGuests = names.filter(function (name) { return name !== "John Miller"; });
+              return "Host John Miller" + (damaGuests.length ? " · Guest " + damaGuests.join(" · ") : "");
+            }
+            return names.length ? "Participants " + names.join(" · ") : "Episode participants not identified";
+          }
           evidence.innerHTML = payload.hits.map(function (hit) {
             var image = hit.source.image_url
               ? '<img class="source-image" src="' + escapeHtml(hit.source.image_url) + '" alt="Episode thumbnail" loading="lazy" />'
               : '<div class="source-image"></div>';
-            var people = hit.people && hit.people.length
-              ? 'Featuring ' + hit.people.map(escapeHtml).join(' · ')
-              : 'Episode participants not identified';
+            var people = roleLine(hit);
             return '<a class="source" href="' + escapeHtml(hit.source.url) + '" target="_blank" rel="noreferrer">' +
               '<div class="source-layout">' + image + '<div class="source-copy">' +
               '<div class="meta">' + escapeHtml(hit.source.date) + ' · ' + escapeHtml(hit.source.locator) + '</div>' +
               '<h3>' + escapeHtml(hit.source.title) + '</h3>' +
-              '<div class="people">' + people + '</div>' +
+              '<div class="people">' + escapeHtml(people) + '</div>' +
               '<p>' + escapeHtml(hit.text) + '</p>' +
               '<div class="viewpoint">Point-of-view evidence · attribution unverified</div>' +
               '</div></div></a>';
@@ -1109,11 +1127,13 @@ export const greatQuestionsUiRoutes = [
 
 For this single query, produce one evidence-grounded perspective brief that:
 - summarizes John's sourced point of view first;
-- separates each guest's perspective;
+- separates each other participant's perspective and preserves their actual role;
 - assesses whether the available dated evidence proves change, stability, a mixed pattern, or is insufficient;
-- never attributes ambiguous caption text to John or a guest;
+- never attributes ambiguous caption text to John or another participant;
 - carries the retrieved memory IDs into the relevant evidenceIds arrays;
 - proposes one strong next question after the evidence comparison.
+
+Role truth for every response: The Agentic Mesh Podcast is co-hosted by Eric Broda and John Miller, so neither is a guest. DAMA LA is hosted solely by John Miller; its other named episode participant is the guest. The schema field guestPerspectives is retained for compatibility, but place any non-John perspective there with the person's correct role in the wording.
 
 If the corpus cannot establish John's view, say so with confidence "insufficient" rather than guessing. Likewise, use an empty guestPerspectives or evolution.moments array when the evidence cannot support them.
 
