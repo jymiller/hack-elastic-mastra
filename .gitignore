@@ -1,0 +1,28 @@
+# Local secrets and environment overrides
+.env
+.env.*
+!.env.example
+
+# Dependencies and build output
+node_modules/
+dist/
+.mastra/
+coverage/
+
+# Local podcast corpus (ingest locally; do not publish raw transcripts)
+data/**
+!data/README.md
+
+# Logs and editor/OS files
+*.log
+.DS_Store
+.idea/
+.vscode/
+
+# Local handoff notes and installed agent tooling
+CODEX-HANDOFF.md
+.agents/
+.claude/
+skills-lock.json
+.mcp.json
+.cursor/mcp.json

@@ -1,0 +1,191 @@
+Great Questions AI — Hackathon Project Concept
+
+Working Idea
+
+Build a living research brain for AI and agentic development.
+
+The system uses long-term memory to track not only what was said, but
+how ideas, beliefs, and questions evolve over time.
+
+The initial source material is the 19 episodes of The Agentic Mesh
+Podcast, with room to expand into research papers, other people’s
+viewpoints, conference notes, Software Design Philosophy Club
+discussions, and future podcast episodes.
+
+The Core Insight
+
+Memory isn’t about the past. It’s about better future thinking.
+
+Most AI research systems retrieve documents or facts. This project
+should remember the evolution of thought:
+
+-   What did I think?
+-   What changed my mind?
+-   What’s next?
+
+That makes memory the engine for reflection, learning, research, and
+better questions.
+
+Core Demo Loop
+
+1. What did I think?
+
+Retrieve previous statements and ideas from podcast episodes and other
+sources.
+
+Example:
+
+  What did I think about agent memory six months ago?
+
+The system should identify the relevant episode, summarize the position
+at that point in time, and preserve the historical context.
+
+2. What changed my mind?
+
+Compare ideas across time.
+
+Identify:
+
+-   New evidence
+-   Conversations or guests that introduced different perspectives
+-   Contradictions
+-   Predictions that turned out to be wrong
+-   Ideas that became more nuanced
+-   Concepts that were abandoned or strengthened
+
+The goal is to show thought evolution, not merely document retrieval.
+
+3. What’s next?
+
+Use the accumulated memory to generate better research questions.
+
+For example:
+
+-   What assumptions am I still making?
+-   Where do current researchers disagree with my earlier position?
+-   What predictions should I revisit?
+-   What questions remain unresolved?
+-   What should I ask on the next podcast?
+
+The Great Questions Loop
+
+The broader loop is:
+
+Capture → Extract → Reflect → Generate Better Questions → Capture
+
+Sources are captured, important ideas and claims are extracted, the
+system reflects across time and viewpoints, and the result is a new set
+of better questions.
+
+Those questions then drive the next podcast, research session, or club
+discussion and become new memories.
+
+Product Layers
+
+GreatQuestions.ai
+
+The natural interface and eventual home for the project.
+
+The product isn’t primarily an archive. Its purpose is to help people
+discover the next great question.
+
+Software Design Philosophy Club
+
+A potential community layer.
+
+Over time, the system could evolve from an individual research memory
+into a collective memory of software design thinking, tracking how ideas
+evolve across people and discussions.
+
+The Agentic Mesh Podcast
+
+The initial memory corpus and proving ground.
+
+The existing episodes provide a chronological record of thinking about:
+
+-   AI agents
+-   Agent memory
+-   Harnesses
+-   Loop engineering
+-   Data and AI
+-   Agentic software development
+-   Related software design philosophy
+
+Hackathon Scope
+
+Keep tonight’s implementation deliberately narrow.
+
+Input
+
+A subset—or, if practical, all—of the existing podcast transcripts.
+
+Memory
+
+Extract and store:
+
+-   Claims
+-   Ideas
+-   Questions
+-   Predictions
+-   People and viewpoints
+-   Episode/date context
+-   Changes in position
+-   Open questions
+
+Demo
+
+Demonstrate three queries:
+
+1.  What did I think?
+2.  What changed my mind?
+3.  What’s next?
+
+The third query should produce questions useful for preparing an
+upcoming podcast.
+
+Why This Is a Memory Project
+
+The important distinction is between retrieval and memory.
+
+A retrieval system says:
+
+  Here are the passages where you discussed agent memory.
+
+The proposed system says:
+
+  Here was your position at this point in time. Later, this conversation
+  introduced a different idea. Your position subsequently shifted in
+  this way. This assumption still appears unresolved. Here are three
+  questions worth asking now.
+
+That requires temporal context, evolving beliefs, relationships among
+ideas, and selective long-term memory.
+
+Possible Names
+
+Working possibilities:
+
+-   Great Questions AI
+-   Memory Mesh
+-   ThoughtGraph
+-   Agentic Mesh Chronicle
+-   Living Research Brain
+-   Research Memory Engine
+
+For now, Great Questions AI is a strong umbrella because the memory
+engine has a clear purpose: generating better questions.
+
+One-Line Pitch
+
+  Great Questions AI is a living research brain that remembers not just
+  what you thought, but how your thinking changed—and uses that memory
+  to discover what you should ask next.
+
+Hackathon Success Criterion
+
+By the end of the night, the project should be able to take historical
+podcast material and convincingly answer:
+
+  What did I think? What changed my mind? What’s next?
+
+If it can do those three things well, the hackathon prototype succeeds.
