@@ -11,14 +11,16 @@ The canonical project concept is preserved verbatim in
 
 The working prototype now provides:
 
-- a custom research-memory experience at `/great-questions` with named local
-  notebooks, structured perspective briefs, episode thumbnails, and timestamped
-  YouTube evidence;
+- a custom research workshop at `/great-questions` with named local notebooks,
+  question-specific saved evidence sets, structured perspective briefs, episode
+  thumbnails, and timestamped YouTube evidence;
 - a podcast-prep workspace at `/podcast-prep` with PDF/text profile upload,
   public/private evidence lanes, precomputed Kevin Lucier demo questions, and
   optional Andrej Karpathy comparison framing;
-- an interactive projector visualization at `/demo` and a high-level system map
-  at `/architecture`;
+- a publishable Memory Story at `/demo` that distills the hackathon research
+  into six evidence-backed shifts in John's thinking, a John × Andrej Karpathy
+  comparison, and the questions that come next;
+- a high-level system map at `/architecture`;
 - persistent local conversation memory and traces backed by LibSQL;
 - OpenRouter as the primary model route with an optional Novita GLM-5.3
   fallback;
@@ -72,7 +74,7 @@ Useful local routes:
 
 - `http://localhost:4111/great-questions` — research memory;
 - `http://localhost:4111/podcast-prep` — interview preparation;
-- `http://localhost:4111/demo` — interactive projector view;
+- `http://localhost:4111/demo` — the publishable, evidence-backed Memory Story;
 - `http://localhost:4111/architecture` — solution architecture;
 - `http://localhost:4111/agents` — Mastra Studio agents and traces.
 
@@ -134,9 +136,13 @@ timeout, and explicit partial-failure reporting.
 
 ## Status
 
-The current app demonstrates attributable, timestamped retrieval over a live
-Elasticsearch corpus, persistent Mastra memory and tracing, model fallback,
-specialist-agent delegation, interview preparation, and a guarded second-corpus
-ingestion workflow. Structured claim/idea/question/prediction document building
-is implemented and tested; automated claim extraction and temporal relation
+The current app separates the research process from its durable output.
+`/great-questions` is the live workshop: Elasticsearch retrieves attributable,
+timestamped passages and Mastra agents synthesize them. `/demo` is the
+publishable result of that process: a precomputed, source-linked narrative that
+can remain online without keeping the AI runtime active. The prototype also
+includes persistent Mastra memory and tracing, model fallback, specialist-agent
+delegation, interview preparation, and a guarded second-corpus ingestion
+workflow. Structured claim/idea/question/prediction document building is
+implemented and tested; automated claim extraction and temporal relation
 adjudication remain follow-on work.

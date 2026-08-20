@@ -445,7 +445,11 @@ const page = String.raw`<!doctype html>
         text-transform: uppercase;
       }
 
-      .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 20px 0 28px; }
+      .evidence-scope { margin-top: 18px; padding: 16px; border: 1px solid rgba(168,240,198,.18); border-radius: 12px; background: rgba(168,240,198,.035); }
+      .evidence-scope span { display: block; color: var(--green); font-size: 8px; font-weight: 750; letter-spacing: .13em; text-transform: uppercase; }
+      .evidence-scope p { margin: 8px 0 0; color: var(--ink); font: 14px/1.45 Georgia, serif; }
+      .evidence-scope small { display: block; margin-top: 8px; color: var(--ink-soft); font-size: 9px; line-height: 1.4; }
+      .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 12px 0 28px; }
       .stat { padding: 12px 9px; border: 1px solid var(--line); border-radius: 12px; }
       .stat strong { display: block; font: 400 22px/1 Georgia, serif; }
       .stat span { display: block; margin-top: 5px; color: var(--ink-soft); font-size: 9px; text-transform: uppercase; }
@@ -503,6 +507,10 @@ const page = String.raw`<!doctype html>
         -webkit-line-clamp: 3;
         -webkit-box-orient: vertical;
       }
+
+      .message.user.has-evidence .bubble { cursor: pointer; box-shadow: 0 0 0 2px rgba(168,240,198,.12); transition: box-shadow 140ms ease, transform 140ms ease; }
+      .message.user.has-evidence .bubble:hover, .message.user.has-evidence .bubble:focus { outline: 0; box-shadow: 0 0 0 2px rgba(168,240,198,.36); transform: translateY(-1px); }
+      .evidence-link { margin-top: 8px; padding: 0; border: 0; color: var(--green); background: transparent; font: 700 9px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .07em; text-transform: uppercase; cursor: pointer; }
 
       .error { color: #ffb4aa; }
 
@@ -572,10 +580,10 @@ const page = String.raw`<!doctype html>
 
         <aside>
           <div class="aside-title"><h2>Evidence trail</h2><span class="strategy" id="strategy">Hybrid search</span></div>
+          <div class="evidence-scope"><span>Evidence for the active question</span><p id="evidence-query">Ask a question to retrieve its specific source trail.</p><small id="evidence-count">Each submitted question gets its own saved evidence set.</small></div>
           <div class="stats">
-            <div class="stat"><strong id="memory-count">159</strong><span>Memories</span></div>
-            <div class="stat"><strong id="relation-count">0</strong><span>Relations</span></div>
-            <div class="stat"><strong id="decision-count">0</strong><span>Receipts</span></div>
+            <div class="stat"><strong>25</strong><span>Podcast episodes</span></div>
+            <div class="stat"><strong id="memory-count">579</strong><span>Searchable memories</span></div>
           </div>
           <div id="evidence"><div class="evidence-empty">Sources will appear here as the agent searches Elasticsearch.</div></div>
         </aside>
@@ -590,6 +598,8 @@ const page = String.raw`<!doctype html>
         var prompt = document.getElementById("prompt");
         var send = document.getElementById("send");
         var evidence = document.getElementById("evidence");
+        var evidenceQuery = document.getElementById("evidence-query");
+        var evidenceCount = document.getElementById("evidence-count");
         var strategy = document.getElementById("strategy");
         var notebookSelect = document.getElementById("notebook-select");
         var notebooksKey = "great-questions:research-notebooks:v2";
@@ -675,7 +685,33 @@ const page = String.raw`<!doctype html>
           return "The research agent could not answer right now. Please try again.";
         }
 
-        function addMessage(role, content, temporary, traceId) {
+        function bindQuestionEvidence(wrapper, question, payload) {
+          if (!wrapper || !payload || !Array.isArray(payload.hits)) return;
+          wrapper.classList.add("has-evidence");
+          var bubble = wrapper.querySelector(".bubble");
+          var existing = wrapper.querySelector(".evidence-link");
+          if (existing) existing.remove();
+          var show = function () {
+            latestEvidence = payload;
+            renderEvidence(payload, question);
+            saveNotebook();
+          };
+          bubble.setAttribute("role", "button");
+          bubble.setAttribute("tabindex", "0");
+          bubble.setAttribute("aria-label", "Show the evidence retrieved for this question");
+          bubble.addEventListener("click", show);
+          bubble.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" || event.key === " ") { event.preventDefault(); show(); }
+          });
+          var link = document.createElement("button");
+          link.className = "evidence-link";
+          link.type = "button";
+          link.textContent = "Show " + payload.hits.length + " sources for this question →";
+          link.addEventListener("click", show);
+          wrapper.appendChild(link);
+        }
+
+        function addMessage(role, content, temporary, traceId, evidencePayload) {
           if (emptyNote) { emptyNote.remove(); emptyNote = null; }
           var wrapper = document.createElement("div");
           wrapper.className = "message " + role;
@@ -698,6 +734,7 @@ const page = String.raw`<!doctype html>
           wrapper.appendChild(label);
           wrapper.appendChild(bubble);
           conversation.appendChild(wrapper);
+          if (role === "user" && evidencePayload) bindQuestionEvidence(wrapper, content, evidencePayload);
           conversation.scrollTop = conversation.scrollHeight;
           return wrapper;
         }
@@ -780,6 +817,8 @@ const page = String.raw`<!doctype html>
           conversation.innerHTML = '<div class="empty-note" id="empty-note"><div class="line"></div><div>Ask about an idea, person, or theme. The agent will search the corpus before it answers and keep the source trail visible.</div></div>';
           emptyNote = document.getElementById("empty-note");
           evidence.innerHTML = '<div class="evidence-empty">Sources will appear here as the agent searches Elasticsearch.</div>';
+          evidenceQuery.textContent = "Ask a question to retrieve its specific source trail.";
+          evidenceCount.textContent = "Each submitted question gets its own saved evidence set.";
           strategy.textContent = "Hybrid search";
         }
 
@@ -795,12 +834,13 @@ const page = String.raw`<!doctype html>
             if (message.role === "assistant" && message.perspective) {
               renderPerspectiveBrief(message.perspective, message.traceId);
             } else {
-              addMessage(message.role, message.content, false, message.traceId);
+              addMessage(message.role, message.content, false, message.traceId, message.evidence);
             }
           });
           if (saved.evidence && Array.isArray(saved.evidence.hits)) {
+            var lastQuestion = history.slice().reverse().find(function (message) { return message.role === "user"; });
             latestEvidence = saved.evidence;
-            renderEvidence(latestEvidence);
+            renderEvidence(latestEvidence, latestEvidence.question || (lastQuestion && lastQuestion.content));
           }
           notebookSelect.value = id;
           saveNotebook();
@@ -848,12 +888,16 @@ const page = String.raw`<!doctype html>
           showNotebook(id);
         }
 
-        function renderEvidence(payload) {
+        function renderEvidence(payload, question) {
+          var scopedQuestion = question || payload.question || "The active question";
+          evidenceQuery.textContent = scopedQuestion;
           strategy.textContent = payload.strategy === "hybrid" ? "Hybrid search" : "Lexical fallback";
           if (!payload.hits || payload.hits.length === 0) {
+            evidenceCount.textContent = "No matching passages for this question.";
             evidence.innerHTML = '<div class="evidence-empty">No directly relevant transcript evidence was found.</div>';
             return;
           }
+          evidenceCount.textContent = payload.hits.length + " relevant transcript passages. Click any one to open its exact timestamp.";
           evidence.innerHTML = payload.hits.map(function (hit) {
             var image = hit.source.image_url
               ? '<img class="source-image" src="' + escapeHtml(hit.source.image_url) + '" alt="Episode thumbnail" loading="lazy" />'
@@ -878,8 +922,6 @@ const page = String.raw`<!doctype html>
             if (!response.ok) throw new Error("status unavailable");
             var data = await response.json();
             document.getElementById("memory-count").textContent = data.memories;
-            document.getElementById("relation-count").textContent = data.relations;
-            document.getElementById("decision-count").textContent = data.decisions;
           } catch (_) {
             document.getElementById("live-status").textContent = "Corpus status unavailable";
           }
@@ -890,9 +932,12 @@ const page = String.raw`<!doctype html>
           busy = true;
           send.disabled = true;
           prompt.value = "";
-          addMessage("user", question, false);
-          history.push({ role: "user", content: question });
+          var userMessage = addMessage("user", question, false);
+          var userHistory = { role: "user", content: question };
+          history.push(userHistory);
           var thinking = addMessage("assistant", "", true);
+          evidenceQuery.textContent = question;
+          evidenceCount.textContent = "Searching this question across the podcast corpus…";
 
           var searchPromise = fetch("/great-questions/api/search", {
             method: "POST",
@@ -902,8 +947,11 @@ const page = String.raw`<!doctype html>
             if (!response.ok) throw new Error("Search failed");
             return response.json();
           }).then(function (payload) {
+            payload.question = question;
             latestEvidence = payload;
-            renderEvidence(payload);
+            userHistory.evidence = payload;
+            bindQuestionEvidence(userMessage, question, payload);
+            renderEvidence(payload, question);
             saveNotebook();
           }).catch(function () {
             evidence.innerHTML = '<div class="evidence-empty">Evidence is reconnecting and will return with the next question.</div>';

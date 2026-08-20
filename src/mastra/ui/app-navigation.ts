@@ -7,7 +7,7 @@ export type GreatQuestionsPage =
 const navigationItems = [
   { href: "/great-questions", id: "research", label: "Research" },
   { href: "/podcast-prep", id: "podcast-prep", label: "Podcast prep" },
-  { href: "/demo", id: "demo", label: "Story" },
+  { href: "/demo", id: "demo", label: "Memory story" },
   { href: "/architecture", id: "architecture", label: "Architecture" },
 ] as const;
 

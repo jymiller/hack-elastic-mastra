@@ -17,6 +17,8 @@ const pages: GreatQuestionsPage[] = [
 test("primary navigation exposes every custom experience and Studio", () => {
   const navigation = renderAppNavigation("research");
 
+  assert.match(navigation, />Memory story<\/a>/);
+
   for (const href of [
     "/great-questions",
     "/podcast-prep",

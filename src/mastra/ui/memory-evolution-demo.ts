@@ -3,225 +3,306 @@ import {
   damaLaPodcastUrl,
 } from "../../lib/dama-la.js";
 import {
+  guestMemoryPrompts,
+  industryComparisons,
+  memoryStoryChapters,
+  memoryStoryThumbnailUrl,
+  nextMemoryQuestions,
+  timestampedMemoryStoryUrl,
+  type MemoryStoryChapter,
+  type MemoryStoryReceipt,
+} from "../../lib/memory-story.js";
+import {
   appHeaderCss,
   renderAppHeader,
 } from "./app-navigation.js";
 
 const damaLaQrSvg = await createDamaLaPodcastQrSvg();
 
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function renderReceipt(receipt: MemoryStoryReceipt): string {
+  const timestampedUrl = timestampedMemoryStoryUrl(receipt);
+  const minute = Math.floor(receipt.seconds / 60);
+  const second = String(receipt.seconds % 60).padStart(2, "0");
+
+  return `<article class="receipt">
+    <a class="receipt-image" href="${escapeHtml(timestampedUrl)}" target="_blank" rel="noreferrer" aria-label="Watch ${escapeHtml(receipt.title)} at ${minute}:${second}">
+      <img src="${escapeHtml(memoryStoryThumbnailUrl(receipt.videoId))}" alt="Thumbnail for ${escapeHtml(receipt.title)}" loading="lazy" />
+      <span class="play">▶</span><span class="time">${minute}:${second}</span>
+    </a>
+    <div class="receipt-body">
+      <div class="receipt-meta">${escapeHtml(receipt.episode)} · ${escapeHtml(receipt.date)}</div>
+      <h3>${escapeHtml(receipt.title)}</h3>
+      <p>${escapeHtml(receipt.note)}</p>
+      <div class="receipt-actions"><a href="${escapeHtml(timestampedUrl)}" target="_blank" rel="noreferrer">Open the evidence <span>↗</span></a><details><summary>Indexed receipt</summary><code>${escapeHtml(receipt.id)}</code></details></div>
+    </div>
+  </article>`;
+}
+
+function renderChapter(chapter: MemoryStoryChapter): string {
+  return `<article class="chapter" id="${escapeHtml(chapter.id)}" data-chapter="${escapeHtml(chapter.id)}" data-accent="${chapter.accent}">
+    <div class="chapter-number"><span>${escapeHtml(chapter.index)}</span><i></i></div>
+    <div class="chapter-copy">
+      <div class="chapter-period">${escapeHtml(chapter.period)}</div>
+      <h2>${escapeHtml(chapter.title)}</h2>
+      <p class="chapter-summary">${escapeHtml(chapter.summary)}</p>
+      <div class="change"><span>What changed</span><p>${escapeHtml(chapter.changed)}</p></div>
+      <div class="next"><span>Question it creates</span><p>${escapeHtml(chapter.question)}</p></div>
+    </div>
+    <div class="receipts">${chapter.receipts.map(renderReceipt).join("")}</div>
+  </article>`;
+}
+
+const receiptCount = memoryStoryChapters.reduce(
+  (count, chapter) => count + chapter.receipts.length,
+  0,
+);
+
 export const memoryEvolutionDemoPage = String.raw`<!doctype html>
-<html lang="en" data-window="all">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="An interactive view of how the Great Questions memory thesis evolved." />
-    <title>Living Memory · Great Questions AI</title>
+    <meta name="description" content="A sourced, click-through narrative of how John Miller's view of agent memory evolved across the Agentic Mesh podcast." />
+    <title>The Memory Story · Great Questions AI</title>
     <style>
       :root {
         color-scheme: dark;
-        --bg: #060908;
-        --ink: #f7f4ec;
-        --soft: #999d96;
-        --line: rgba(247,244,236,.12);
-        --mint: #5dffa1;
-        --violet: #c787ff;
-        --amber: #ffc557;
-        --blue: #55d6ff;
+        --bg: #070a09;
+        --panel: #0d1210;
+        --panel-2: #111714;
+        --ink: #f5f3ec;
+        --soft: #a3aaa3;
+        --faint: #737a74;
+        --line: rgba(245,243,236,.11);
+        --mint: #62f7a8;
+        --violet: #c98aff;
+        --amber: #ffc766;
+        --blue: #62d8ff;
       }
       * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; scroll-padding-top: 100px; }
       html, body { margin: 0; min-height: 100%; }
       body {
-        color: var(--ink); background:
-          radial-gradient(circle at 15% 35%, rgba(93,255,161,.10), transparent 30rem),
-          radial-gradient(circle at 77% 25%, rgba(199,135,255,.11), transparent 34rem),
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 8% 16%, rgba(98,247,168,.08), transparent 28rem),
+          radial-gradient(circle at 88% 30%, rgba(201,138,255,.07), transparent 32rem),
           var(--bg);
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
       a { color: inherit; }
-      button { font: inherit; }
-      header {
-        height: 54px; padding: 0 clamp(20px, 3.8vw, 58px); display: flex; align-items: center;
-        justify-content: space-between; gap: 24px; border-bottom: 1px solid var(--line);
-        background: rgba(6,9,8,.78); backdrop-filter: blur(18px);
-      }
-      .brand { display: flex; align-items: center; gap: 11px; }
-      .mark { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid rgba(93,255,161,.45); border-radius: 50%; color: var(--mint); font: 15px Georgia, serif; }
-      .brand strong, .brand span { display: block; }
-      .brand strong { font-size: 12px; }
-      .brand span { color: var(--soft); font-size: 8px; letter-spacing: .11em; text-transform: uppercase; }
       ${appHeaderCss}
-      main { width: min(1510px, 100%); margin: auto; padding: 19px clamp(20px, 3.8vw, 58px) 18px; }
-      .intro { display: flex; align-items: end; justify-content: space-between; gap: 34px; }
-      .eyebrow { color: var(--mint); font-size: 8px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }
-      h1 { margin: 5px 0 0; font: 400 clamp(38px, 4.7vw, 68px)/.93 Georgia, serif; letter-spacing: -.05em; }
-      .live { display: flex; align-items: center; gap: 8px; padding-bottom: 6px; color: var(--soft); font: 9px ui-monospace, SFMono-Regular, Menlo, monospace; }
-      .live i { width: 7px; height: 7px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 13px var(--mint); }
-      .theater { display: grid; grid-template-columns: 220px minmax(520px, 1fr) 240px; gap: 28px; margin-top: 16px; min-height: 465px; }
-      .arc { position: relative; padding: 15px 0 8px 22px; }
-      .arc::before { content: ""; position: absolute; left: 4px; top: 23px; bottom: 25px; width: 1px; background: linear-gradient(var(--amber), var(--mint), var(--violet)); box-shadow: 0 0 14px rgba(93,255,161,.42); }
-      .era { position: relative; padding: 11px 0 22px 14px; }
-      .era::before { content: ""; position: absolute; left: -21px; top: 17px; width: 9px; height: 9px; border-radius: 50%; background: var(--tone); box-shadow: 0 0 15px var(--tone); }
-      .era.then { --tone: var(--amber); }
-      .era.now { --tone: var(--violet); margin-top: 70px; }
-      .era small { color: var(--tone); font-size: 8px; font-weight: 800; letter-spacing: .17em; text-transform: uppercase; }
-      .era h2 { margin: 9px 0 8px; font: 400 27px/1.02 Georgia, serif; letter-spacing: -.035em; }
-      .era p { margin: 0; color: var(--soft); font-size: 10px; line-height: 1.55; }
-      .era a { display: inline-block; margin-top: 11px; color: var(--tone); font-size: 8px; letter-spacing: .08em; text-decoration: none; text-transform: uppercase; }
-      .network { position: relative; min-width: 0; border-left: 1px solid var(--line); border-right: 1px solid var(--line); overflow: hidden; }
-      .network::before { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(rgba(247,244,236,.14) .7px, transparent .7px); background-size: 18px 18px; mask-image: radial-gradient(circle at 52% 50%, #000, transparent 72%); }
-      .network svg { position: relative; display: block; width: 100%; height: 465px; }
-      .edge { fill: none; stroke: rgba(247,244,236,.16); stroke-width: 1.4; }
-      .edge.primary { stroke: url(#memoryGradient); stroke-width: 2.2; filter: url(#glow); }
-      .flow-dot { fill: var(--mint); filter: url(#glow); }
-      .memory-node { cursor: pointer; outline: none; transition: opacity 220ms ease, filter 220ms ease; }
-      .memory-node:focus .node-ring, .memory-node:hover .node-ring { stroke-width: 2.6; filter: url(#glow); }
-      .node-ring { fill: rgba(6,9,8,.92); stroke: var(--tone); stroke-width: 1.4; transition: stroke-width 150ms ease; }
-      .node-core { fill: var(--tone); opacity: .12; }
-      .node-kicker { fill: var(--tone); font: 700 8px Inter, sans-serif; letter-spacing: 1.2px; text-anchor: middle; }
-      .node-label { fill: var(--ink); font: 400 13px Georgia, serif; text-anchor: middle; }
-      .context { --tone: var(--amber); }
-      .persistent { --tone: var(--mint); }
-      .episodic { --tone: var(--blue); }
-      .decay { --tone: var(--violet); }
-      .evidence { --tone: var(--mint); }
-      .receipt { --tone: var(--amber); }
-      .uncertain { --tone: var(--blue); }
-      .relation { --tone: var(--violet); }
-      html[data-window="180"] .memory-node[data-age="old"] { opacity: .22; filter: grayscale(.8); }
-      html[data-window="21"] .memory-node[data-age="old"], html[data-window="21"] .memory-node[data-age="long"] { opacity: .13; filter: grayscale(.9); }
-      html[data-window="21"] .edge:not(.recent) { opacity: .18; }
-      .lens { display: flex; flex-direction: column; padding: 13px 0 7px; }
-      .lens-label { color: var(--soft); font-size: 8px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
-      .lens-controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 10px; }
-      .lens-controls button { padding: 7px 3px; border: 1px solid var(--line); border-radius: 8px; color: var(--soft); background: transparent; font-size: 8px; cursor: pointer; }
-      .lens-controls button[aria-pressed="true"] { color: var(--bg); border-color: var(--mint); background: var(--mint); }
-      .detail { min-height: 160px; margin-top: 18px; padding-top: 17px; border-top: 1px solid var(--line); }
-      .detail-meta { color: var(--violet); font-size: 8px; letter-spacing: .13em; text-transform: uppercase; }
-      .detail h3 { margin: 8px 0; font: 400 26px/1 Georgia, serif; }
-      .detail p { margin: 0; color: var(--soft); font-size: 10px; line-height: 1.55; }
-      .detail-source { display: block; margin-top: 12px; color: var(--amber); font-size: 8px; }
-      .qr-row { display: grid; grid-template-columns: 1fr 112px; gap: 12px; align-items: center; margin-top: auto; padding-top: 18px; border-top: 1px solid var(--line); }
-      .qr-copy strong { display: block; color: var(--mint); font: 400 19px/1 Georgia, serif; }
-      .qr-copy span { display: block; margin-top: 7px; color: var(--soft); font-size: 8px; line-height: 1.4; }
-      .qr { display: block; padding: 6px; border-radius: 8px; background: #fff; }
+      main { width: min(1320px, 100%); margin: 0 auto; padding: 0 clamp(22px, 5vw, 72px) 80px; }
+      .hero { padding: clamp(68px, 9vw, 120px) 0 44px; border-bottom: 1px solid var(--line); }
+      .eyebrow { color: var(--mint); font: 800 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .18em; text-transform: uppercase; }
+      h1 { max-width: 1050px; margin: 22px 0 0; font: 400 clamp(52px, 7.2vw, 104px)/.91 Georgia, "Times New Roman", serif; letter-spacing: -.058em; }
+      .hero-intro { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(260px, .75fr); gap: 70px; align-items: end; margin-top: 46px; }
+      .dek { max-width: 760px; margin: 0; color: #c5cbc5; font-size: clamp(17px, 1.7vw, 24px); line-height: 1.55; letter-spacing: -.015em; }
+      .provenance { padding-left: 20px; border-left: 1px solid var(--amber); }
+      .provenance strong { display: block; color: var(--amber); font: 800 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .14em; text-transform: uppercase; }
+      .provenance p { margin: 11px 0 0; color: var(--soft); font-size: 13px; line-height: 1.55; }
+      .hero-stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 28px; }
+      .hero-stats span { padding: 9px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--soft); font: 700 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .06em; text-transform: uppercase; }
+      .hero-stats i { display: inline-block; width: 6px; height: 6px; margin-right: 7px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 10px var(--mint); }
+      .framing { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 30px 0 0; }
+      .frame { min-height: 210px; padding: 28px; border: 1px solid var(--line); border-radius: 18px; background: rgba(13,18,16,.62); }
+      .frame b { display: block; color: var(--tone); font: 800 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .15em; text-transform: uppercase; }
+      .frame h2 { margin: 34px 0 12px; font: 400 31px/1.04 Georgia, serif; letter-spacing: -.035em; }
+      .frame p { margin: 0; color: var(--soft); font-size: 14px; line-height: 1.55; }
+      .frame.then { --tone: var(--amber); }
+      .frame.changed { --tone: var(--blue); }
+      .frame.next-frame { --tone: var(--violet); }
+      .story-index { position: sticky; top: 0; z-index: 5; display: flex; gap: 6px; margin: 0 calc(clamp(22px, 5vw, 72px) * -1); padding: 13px clamp(22px, 5vw, 72px); overflow-x: auto; border-bottom: 1px solid var(--line); background: rgba(7,10,9,.9); backdrop-filter: blur(18px); scrollbar-width: none; }
+      .story-index::-webkit-scrollbar { display: none; }
+      .story-index a { flex: 0 0 auto; padding: 9px 12px; border: 1px solid transparent; border-radius: 999px; color: var(--faint); font-size: 11px; text-decoration: none; transition: 160ms ease; }
+      .story-index a:hover, .story-index a.active { color: var(--ink); border-color: var(--line); background: var(--panel-2); }
+      .story-index a.active { color: var(--mint); }
+      .story { padding-top: 44px; }
+      .section-kicker { color: var(--mint); font: 800 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .17em; text-transform: uppercase; }
+      .story-title { max-width: 720px; margin: 16px 0 60px; font: 400 clamp(36px, 4vw, 58px)/1 Georgia, serif; letter-spacing: -.04em; }
+      .chapter { --tone: var(--mint); display: grid; grid-template-columns: 74px minmax(280px, .78fr) minmax(430px, 1.22fr); gap: clamp(24px, 4vw, 58px); padding: 62px 0 76px; border-top: 1px solid var(--line); scroll-margin-top: 70px; }
+      .chapter[data-accent="amber"] { --tone: var(--amber); }
+      .chapter[data-accent="blue"] { --tone: var(--blue); }
+      .chapter[data-accent="violet"] { --tone: var(--violet); }
+      .chapter-number { display: flex; flex-direction: column; align-items: center; gap: 15px; color: var(--tone); font: 700 13px ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .chapter-number span { display: grid; width: 50px; height: 50px; place-items: center; border: 1px solid color-mix(in srgb, var(--tone) 45%, transparent); border-radius: 50%; box-shadow: inset 0 0 18px color-mix(in srgb, var(--tone) 9%, transparent); }
+      .chapter-number i { width: 1px; flex: 1; min-height: 90px; background: linear-gradient(var(--tone), transparent); opacity: .42; }
+      .chapter-period { color: var(--tone); font: 800 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .14em; text-transform: uppercase; }
+      .chapter-copy h2 { max-width: 520px; margin: 15px 0 18px; font: 400 clamp(34px, 3.7vw, 55px)/.98 Georgia, serif; letter-spacing: -.04em; }
+      .chapter-summary { margin: 0; color: #c2c8c2; font-size: 16px; line-height: 1.62; }
+      .change, .next { margin-top: 28px; padding-top: 19px; border-top: 1px solid var(--line); }
+      .change span, .next span { display: block; margin-bottom: 9px; color: var(--tone); font: 800 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .14em; text-transform: uppercase; }
+      .change p, .next p { margin: 0; font-size: 14px; line-height: 1.55; }
+      .next p { color: var(--soft); }
+      .receipts { display: grid; align-content: start; gap: 14px; }
+      .receipt { display: grid; grid-template-columns: 178px 1fr; min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: rgba(13,18,16,.76); transition: transform 160ms ease, border-color 160ms ease; }
+      .receipt:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--tone) 42%, transparent); }
+      .receipt-image { position: relative; display: block; min-height: 178px; overflow: hidden; background: #030504; }
+      .receipt-image::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 55%, rgba(13,18,16,.72)); }
+      .receipt-image img { width: 100%; height: 100%; object-fit: cover; opacity: .77; filter: saturate(.78) contrast(1.05); transition: transform 220ms ease, opacity 220ms ease; }
+      .receipt:hover img { transform: scale(1.035); opacity: .95; }
+      .play { position: absolute; z-index: 1; left: 16px; bottom: 16px; display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid rgba(255,255,255,.38); border-radius: 50%; background: rgba(7,10,9,.78); color: var(--tone); font-size: 11px; }
+      .time { position: absolute; z-index: 1; right: 10px; bottom: 10px; padding: 6px 7px; border-radius: 6px; background: rgba(7,10,9,.88); font: 700 9px ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .receipt-body { min-width: 0; padding: 19px 20px 17px; }
+      .receipt-meta { color: var(--tone); font: 700 9px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .08em; text-transform: uppercase; }
+      .receipt h3 { margin: 10px 0 8px; font: 400 23px/1.08 Georgia, serif; letter-spacing: -.025em; }
+      .receipt p { margin: 0; color: var(--soft); font-size: 12px; line-height: 1.5; }
+      .receipt-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 15px; }
+      .receipt-actions > a { color: var(--tone); font: 800 9px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .08em; text-decoration: none; text-transform: uppercase; }
+      details { position: relative; color: var(--faint); font: 700 9px ui-monospace, SFMono-Regular, Menlo, monospace; }
+      summary { cursor: pointer; }
+      details code { display: block; max-width: 300px; margin-top: 8px; overflow: hidden; color: var(--soft); font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+      .throughline { display: grid; grid-template-columns: .72fr 1.28fr; gap: 80px; margin: 12px 0 90px; padding: clamp(34px, 5vw, 66px); border: 1px solid rgba(98,247,168,.2); border-radius: 24px; background: linear-gradient(135deg, rgba(98,247,168,.09), rgba(201,138,255,.045)); }
+      .throughline h2 { margin: 14px 0 0; font: 400 clamp(36px, 4vw, 58px)/.98 Georgia, serif; letter-spacing: -.04em; }
+      .throughline blockquote { margin: 0; font: 400 clamp(22px, 2.4vw, 34px)/1.35 Georgia, serif; letter-spacing: -.025em; }
+      .throughline blockquote span { color: var(--mint); }
+      .comparison { padding: 80px 0; border-top: 1px solid var(--line); }
+      .comparison-head { display: grid; grid-template-columns: .85fr 1.15fr; gap: 80px; align-items: end; }
+      .comparison h2, .questions h2 { margin: 15px 0 0; font: 400 clamp(42px, 5.2vw, 72px)/.95 Georgia, serif; letter-spacing: -.045em; }
+      .comparison-head > p { margin: 0; color: var(--soft); font-size: 16px; line-height: 1.6; }
+      .comparison-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 48px; }
+      .comparison-card { min-height: 310px; display: flex; flex-direction: column; padding: 28px; border: 1px solid var(--line); border-radius: 18px; background: var(--panel); }
+      .comparison-card:nth-child(1) { --tone: var(--blue); }
+      .comparison-card:nth-child(2) { --tone: var(--mint); }
+      .comparison-card:nth-child(3) { --tone: var(--violet); }
+      .comparison-card small { color: var(--tone); font: 800 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .15em; text-transform: uppercase; }
+      .comparison-card h3 { margin: 34px 0 14px; font: 400 30px/1.05 Georgia, serif; letter-spacing: -.03em; }
+      .comparison-card p { margin: 0; color: var(--soft); font-size: 14px; line-height: 1.62; }
+      .comparison-card a { margin-top: auto; padding-top: 24px; color: var(--tone); font: 700 9px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .06em; text-decoration: none; text-transform: uppercase; }
+      .questions { padding: 82px 0; border-top: 1px solid var(--line); }
+      .question-layout { display: grid; grid-template-columns: .8fr 1.2fr; gap: 80px; margin-top: 52px; }
+      .question-list { counter-reset: question; margin: 0; padding: 0; list-style: none; }
+      .question-list li { counter-increment: question; position: relative; padding: 23px 0 23px 48px; border-top: 1px solid var(--line); font: 400 22px/1.35 Georgia, serif; }
+      .question-list li::before { content: "0" counter(question); position: absolute; left: 0; top: 27px; color: var(--violet); font: 700 10px ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .guest-prompts { display: grid; gap: 10px; }
+      .guest-prompts > div { padding: 22px 24px; border: 1px solid var(--line); border-radius: 14px; background: rgba(13,18,16,.7); }
+      .guest-prompts b { display: block; margin-bottom: 10px; color: var(--amber); font: 800 9px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .14em; text-transform: uppercase; }
+      .guest-prompts p { margin: 0; color: #c4cac4; font-size: 14px; line-height: 1.55; }
+      .publish { display: grid; grid-template-columns: 1fr 180px; gap: 46px; align-items: center; margin-top: 20px; padding: 38px; border: 1px solid var(--line); border-radius: 22px; background: var(--panel); }
+      .publish h2 { margin: 12px 0 13px; font: 400 clamp(34px, 4vw, 54px)/1 Georgia, serif; letter-spacing: -.04em; }
+      .publish p { max-width: 720px; margin: 0; color: var(--soft); font-size: 14px; line-height: 1.6; }
+      .qr { display: block; padding: 10px; border-radius: 12px; background: white; }
       .qr svg { display: block; width: 100%; height: auto; }
-      .proof { display: grid; grid-template-columns: auto 1fr auto 1fr auto; gap: 13px; align-items: center; margin-top: 13px; padding-top: 12px; border-top: 1px solid var(--line); }
-      .proof b { color: var(--ink); font: 400 15px Georgia, serif; }
-      .proof span { color: var(--soft); font-size: 8px; }
-      .proof-line { height: 1px; background: linear-gradient(90deg, var(--amber), var(--mint), var(--violet)); }
-      @media (max-width: 1050px) {
-        .theater { grid-template-columns: 180px minmax(460px, 1fr) 210px; gap: 18px; }
-        .network svg { height: 450px; }
+      footer { display: flex; justify-content: space-between; gap: 24px; padding: 30px 0 0; color: var(--faint); font: 700 9px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .08em; text-transform: uppercase; }
+      @media (max-width: 1040px) {
+        .chapter { grid-template-columns: 58px minmax(240px, .8fr) minmax(360px, 1.2fr); gap: 24px; }
+        .receipt { grid-template-columns: 138px 1fr; }
+        .comparison-head, .question-layout, .throughline { gap: 42px; }
       }
       @media (max-width: 820px) {
-        header { height: auto; min-height: 54px; }
-        .theater { grid-template-columns: 1fr; }
-        .arc { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding-left: 0; }
-        .arc::before, .era::before { display: none; }
-        .era.now { margin-top: 0; }
-        .network { border: 1px solid var(--line); }
-        .lens { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-        .qr-row { margin-top: 18px; }
+        .hero-intro, .throughline, .comparison-head, .question-layout { grid-template-columns: 1fr; gap: 28px; }
+        .framing, .comparison-grid { grid-template-columns: 1fr; }
+        .frame { min-height: 0; }
+        .frame h2 { margin-top: 24px; }
+        .chapter { grid-template-columns: 44px 1fr; }
+        .receipts { grid-column: 2; }
+        .chapter-number span { width: 40px; height: 40px; }
+        .publish { grid-template-columns: 1fr 140px; }
       }
       @media (max-width: 560px) {
-        .intro { display: block; }
-        .live { margin-top: 10px; }
-        .arc, .lens { grid-template-columns: 1fr; }
-        .network svg { height: 370px; }
-        .proof { grid-template-columns: 1fr; }
-        .proof-line { width: 1px; height: 18px; }
+        main { padding-inline: 18px; }
+        .hero { padding-top: 48px; }
+        h1 { font-size: 50px; }
+        .story-index { margin-inline: -18px; padding-inline: 18px; }
+        .story-title { margin-bottom: 34px; }
+        .chapter { grid-template-columns: 1fr; padding: 46px 0 58px; }
+        .chapter-number { flex-direction: row; justify-content: flex-start; }
+        .chapter-number i { width: 80px; height: 1px; min-height: 0; flex: none; background: linear-gradient(90deg, var(--tone), transparent); }
+        .receipts { grid-column: 1; }
+        .receipt { grid-template-columns: 1fr; }
+        .receipt-image { min-height: 190px; }
+        .receipt-image::after { background: linear-gradient(0deg, rgba(13,18,16,.45), transparent 55%); }
+        .throughline { padding: 28px; }
+        .comparison, .questions { padding-block: 58px; }
+        .publish { grid-template-columns: 1fr; padding: 26px; }
+        .qr { width: 160px; }
+        footer { display: block; }
+        footer span { display: block; margin-top: 8px; }
       }
     </style>
   </head>
   <body>
     ${renderAppHeader("demo")}
     <main>
-      <section class="intro">
-        <div><div class="eyebrow">One idea · a living record</div><h1>Memory is not a file. It’s a point of view in motion.</h1></div>
-        <div class="live"><i></i><span id="live-copy">Loading the evidence graph…</span></div>
-      </section>
-
-      <section class="theater">
-        <aside class="arc" aria-label="John's memory thesis over time">
-          <article class="era then"><small>Then · Apr 2026</small><h2>Memory as context</h2><p>Give the model material so a conversation can remember what the user supplied.</p><a href="https://www.youtube.com/watch?v=bqrQVYkKuN0&t=1891s" target="_blank" rel="noreferrer">Podcast receipt · 31:31 ↗</a></article>
-          <article class="era now"><small>Now · working thesis</small><h2>Memory as evidence</h2><p>Keep dated beliefs, disagreement, uncertainty, and source receipts. Extend the record—never erase it.</p><a href="/great-questions">Open the living memory ↗</a></article>
-        </aside>
-
-        <div class="network" aria-label="Interactive memory evolution graph">
-          <svg viewBox="0 0 780 465" role="img" aria-labelledby="network-title network-description">
-            <title id="network-title">Memory evolution graph</title>
-            <desc id="network-description">A connected path from context through persistent, episodic and time-decayed memory to an evidence graph, with source, uncertainty and relation branches.</desc>
-            <defs>
-              <linearGradient id="memoryGradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffc557"/><stop offset=".42" stop-color="#5dffa1"/><stop offset=".72" stop-color="#c787ff"/><stop offset="1" stop-color="#55d6ff"/></linearGradient>
-              <filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-              <path id="spine" d="M116 116 C205 90 225 183 302 182 S382 94 449 116 S518 208 575 207 S630 300 654 331"/>
-            </defs>
-            <path class="edge primary" d="M116 116 C205 90 225 183 302 182 S382 94 449 116 S518 208 575 207 S630 300 654 331"/>
-            <path class="edge" d="M302 182 C258 250 224 285 191 340"/>
-            <path class="edge recent" d="M449 116 C421 222 398 296 354 354"/>
-            <path class="edge recent" d="M575 207 C560 274 526 334 494 374"/>
-            <path class="edge recent" d="M191 340 C336 425 500 414 654 331"/>
-            <circle class="flow-dot" r="3"><animateMotion dur="4.4s" repeatCount="indefinite"><mpath href="#spine"/></animateMotion></circle>
-            <circle class="flow-dot" r="2" opacity=".65"><animateMotion dur="4.4s" begin="-2.2s" repeatCount="indefinite"><mpath href="#spine"/></animateMotion></circle>
-
-            <g class="memory-node context" data-id="context" data-age="old" role="button" tabindex="0" transform="translate(116 116)"><circle class="node-ring" r="46"/><circle class="node-core" r="36"/><text class="node-kicker" y="-4">2026</text><text class="node-label" y="15">Context</text></g>
-            <g class="memory-node persistent" data-id="persistent" data-age="long" role="button" tabindex="0" transform="translate(302 182)"><circle class="node-ring" r="43"/><circle class="node-core" r="33"/><text class="node-kicker" y="-4">STORE</text><text class="node-label" y="15">Persistent</text></g>
-            <g class="memory-node episodic" data-id="episodic" data-age="recent" role="button" tabindex="0" transform="translate(449 116)"><circle class="node-ring" r="45"/><circle class="node-core" r="35"/><text class="node-kicker" y="-4">TIME</text><text class="node-label" y="15">Episodic</text></g>
-            <g class="memory-node decay" data-id="decay" data-age="recent" role="button" tabindex="0" transform="translate(575 207)"><circle class="node-ring" r="47"/><circle class="node-core" r="37"/><text class="node-kicker" y="-4">WEIGHT</text><text class="node-label" y="15">Time decay</text></g>
-            <g class="memory-node evidence" data-id="evidence" data-age="current" role="button" tabindex="0" transform="translate(654 331)"><circle class="node-ring" r="56"/><circle class="node-core" r="45"/><text class="node-kicker" y="-7">NOW</text><text class="node-label" y="12">Evidence</text><text class="node-label" y="28">graph</text></g>
-            <g class="memory-node receipt" data-id="receipt" data-age="long" role="button" tabindex="0" transform="translate(191 340)"><circle class="node-ring" r="35"/><circle class="node-core" r="27"/><text class="node-kicker" y="-3">PROOF</text><text class="node-label" y="14">Sources</text></g>
-            <g class="memory-node uncertain" data-id="uncertain" data-age="recent" role="button" tabindex="0" transform="translate(354 354)"><circle class="node-ring" r="37"/><circle class="node-core" r="29"/><text class="node-kicker" y="-3">HONESTY</text><text class="node-label" y="14">Uncertainty</text></g>
-            <g class="memory-node relation" data-id="relation" data-age="current" role="button" tabindex="0" transform="translate(494 374)"><circle class="node-ring" r="36"/><circle class="node-core" r="28"/><text class="node-kicker" y="-3">CHANGE</text><text class="node-label" y="14">Relations</text></g>
-          </svg>
+      <section class="hero">
+        <div class="eyebrow">Hackathon output · John Miller’s memory thesis</div>
+        <h1>What did I think?<br />What changed?<br />What comes next?</h1>
+        <div class="hero-intro">
+          <p class="dek">The publishable artifact produced by tonight’s research process: a click-through story of how one idea moved from context windows to a governed system of working, shared, episodic, and enterprise memory.</p>
+          <aside class="provenance"><strong>Read this honestly</strong><p>This is an editorial synthesis of co-hosted discussions. Agentic Mesh auto-captions do not reliably identify whether John Miller or Eric Broda spoke each passage.</p></aside>
         </div>
-
-        <aside class="lens">
-          <div><div class="lens-label">Retrieval lens</div><div class="lens-controls" aria-label="Memory time window"><button type="button" data-window="all" aria-pressed="true">All</button><button type="button" data-window="180" aria-pressed="false">180d</button><button type="button" data-window="21" aria-pressed="false">21d</button></div></div>
-          <div class="detail" aria-live="polite"><div class="detail-meta" id="detail-meta">Current thesis</div><h3 id="detail-title">Evidence graph</h3><p id="detail-copy">The answer includes the claim, its dated source, attribution confidence, and the path showing how the idea changed.</p><span class="detail-source" id="detail-source">Great Questions · live system</span></div>
-          <div class="qr-row"><div class="qr-copy"><strong>Watch the source.</strong><span>Scan for the DAMA LA Podcast.</span></div><a class="qr" href="${damaLaPodcastUrl}" target="_blank" rel="noreferrer" aria-label="Open the DAMA LA Podcast playlist">${damaLaQrSvg}</a></div>
-        </aside>
+        <div class="hero-stats"><span><i></i><span id="live-copy">25 episodes indexed</span></span><span>6 conceptual shifts</span><span>${receiptCount} timestamped receipts</span><span>No AI required to view</span></div>
+        <div class="framing">
+          <article class="frame then"><b>What did I think?</b><h2>Memory made agents stateful.</h2><p>It let long-running, distributed work survive pauses, failures, and handoffs.</p></article>
+          <article class="frame changed"><b>What changed?</b><h2>Recall became governed context.</h2><p>Selection, policy, provenance, identity, and process recovery became part of the definition.</p></article>
+          <article class="frame next-frame"><b>What comes next?</b><h2>Memory has to improve judgment.</h2><p>We still need consolidation, contradiction handling, intentional forgetting, and evidence that remembering helps.</p></article>
+        </div>
       </section>
 
-      <footer class="proof"><b>Context</b><div class="proof-line"></div><b>Continuity</b><div class="proof-line"></div><b>Evidence that changes over time</b></footer>
+      <nav class="story-index" aria-label="Memory story chapters">
+        ${memoryStoryChapters.map((chapter) => `<a href="#${escapeHtml(chapter.id)}" data-index="${escapeHtml(chapter.id)}">${escapeHtml(chapter.index)} · ${escapeHtml(chapter.title)}</a>`).join("")}
+        <a href="#karpathy">07 · Compare with Karpathy</a><a href="#next">08 · Ask next</a>
+      </nav>
+
+      <section class="story">
+        <div class="section-kicker">The evidence trail</div>
+        <h2 class="story-title">Six shifts make the current point of view legible.</h2>
+        ${memoryStoryChapters.map(renderChapter).join("")}
+      </section>
+
+      <section class="throughline">
+        <div><div class="section-kicker">The throughline</div><h2>The idea grew outward.</h2></div>
+        <blockquote>Memory started as the state required to keep an agent running. It became the <span>evidence, policy, identity, and experience</span> required to let a system of agents act with continuity—and remain accountable for it.</blockquote>
+      </section>
+
+      <section class="comparison" id="karpathy">
+        <div class="comparison-head"><div><div class="section-kicker">Third-party research lane</div><h2>John × Karpathy</h2></div><p>Karpathy is useful here as a comparison lens, not an authority who grades the podcast. The overlap clarifies the foundation; the difference exposes the enterprise problem; the gap creates the next interview.</p></div>
+        <div class="comparison-grid">
+          ${industryComparisons.map((item) => `<article class="comparison-card"><small>${escapeHtml(item.label)}</small><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.text)}</p><a href="${escapeHtml(item.sourceUrl)}" target="_blank" rel="noreferrer">${escapeHtml(item.sourceLabel)} ↗</a></article>`).join("")}
+        </div>
+      </section>
+
+      <section class="questions" id="next">
+        <div class="section-kicker">What we need to solve next</div>
+        <h2>The story should end with better questions.</h2>
+        <div class="question-layout">
+          <ol class="question-list">${nextMemoryQuestions.map((question) => `<li>${escapeHtml(question)}</li>`).join("")}</ol>
+          <div class="guest-prompts">${guestMemoryPrompts.map((prompt) => `<div><b>${escapeHtml(prompt.label)}</b><p>${escapeHtml(prompt.text)}</p></div>`).join("")}</div>
+        </div>
+      </section>
+
+      <section class="publish">
+        <div><div class="section-kicker">The durable artifact</div><h2>Keep the story. Turn off the agent.</h2><p>This page is intentionally precomputed and source-linked. It remains useful after the live research agents are paused; the AI system is the editorial workshop used to refresh the narrative when new episodes arrive.</p></div>
+        <a class="qr" href="${damaLaPodcastUrl}" target="_blank" rel="noreferrer" aria-label="Open the DAMA LA Podcast playlist">${damaLaQrSvg}</a>
+      </section>
+
+      <footer><b>Great Questions AI · A sourced point of view in motion</b><span>Podcast evidence · Industry comparison · Questions worth asking</span></footer>
     </main>
     <script>
       (function () {
-        var details = {
-          context: ["Earlier position", "Memory as context", "The model remembers material placed into the conversation window.", "DAMA LA · Apr 2026 · 31:31"],
-          persistent: ["Long-term memory", "Persistent", "Elasticsearch keeps memories available beyond a single agent turn or thread.", "Elastic memory path"],
-          episodic: ["Tonight's provocation", "Episodic", "When an event happened becomes part of retrieval—not just what the event said.", "Elastic hack night · presentation"],
-          decay: ["Retrieval policy", "Time decay", "Changing the time window changes which memories shape the agent's behavior.", "Elastic hack night · 180d versus 21d"],
-          evidence: ["Current thesis", "Evidence graph", "The answer includes the claim, its dated source, attribution confidence, and the path showing how the idea changed.", "Great Questions · live system"],
-          receipt: ["Grounding", "Source receipts", "Every important claim should link back to an episode, timestamp, or research source.", "YouTube · timestamped evidence"],
-          uncertain: ["Epistemic honesty", "Uncertainty", "Auto-captions are not diarized, so likely attribution must stay visibly uncertain.", "Retrieval metadata"],
-          relation: ["Evolution", "Relations", "Changed, reinforced, contradicted, or superseded: new thinking extends the record instead of overwriting it.", "Great Questions memory model"]
-        };
-        function showDetail(id) {
-          var detail = details[id];
-          if (!detail) return;
-          document.getElementById("detail-meta").textContent = detail[0];
-          document.getElementById("detail-title").textContent = detail[1];
-          document.getElementById("detail-copy").textContent = detail[2];
-          document.getElementById("detail-source").textContent = detail[3];
+        var indexLinks = Array.from(document.querySelectorAll("[data-index]"));
+        var chapters = Array.from(document.querySelectorAll("[data-chapter]"));
+        if ("IntersectionObserver" in window) {
+          var observer = new IntersectionObserver(function (entries) {
+            var visible = entries.filter(function (entry) { return entry.isIntersecting; }).sort(function (a, b) { return b.intersectionRatio - a.intersectionRatio; })[0];
+            if (!visible) return;
+            var id = visible.target.getAttribute("data-chapter");
+            indexLinks.forEach(function (link) { link.classList.toggle("active", link.getAttribute("data-index") === id); });
+          }, { rootMargin: "-20% 0px -58% 0px", threshold: [0, .2, .5] });
+          chapters.forEach(function (chapter) { observer.observe(chapter); });
         }
-        document.querySelectorAll(".memory-node").forEach(function (node) {
-          node.addEventListener("click", function () { showDetail(node.getAttribute("data-id")); });
-          node.addEventListener("keydown", function (event) { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); showDetail(node.getAttribute("data-id")); } });
-        });
-        document.querySelectorAll("[data-window]").forEach(function (button) {
-          if (!button.matches("button")) return;
-          button.addEventListener("click", function () {
-            var value = button.getAttribute("data-window") || "all";
-            document.documentElement.setAttribute("data-window", value);
-            document.querySelectorAll(".lens-controls button").forEach(function (candidate) { candidate.setAttribute("aria-pressed", String(candidate === button)); });
-            if (value === "21") showDetail("decay");
-            else if (value === "180") showDetail("episodic");
-            else showDetail("evidence");
-          });
-        });
         fetch("/great-questions/api/status").then(function (response) { if (!response.ok) throw new Error("status"); return response.json(); }).then(function (data) {
-          document.getElementById("live-copy").textContent = data.memories + " memories · " + data.relations + " relations · " + data.decisions + " decisions";
-        }).catch(function () { document.getElementById("live-copy").textContent = "Living evidence system"; });
+          document.getElementById("live-copy").textContent = data.memories + " evidence memories indexed";
+        }).catch(function () { document.getElementById("live-copy").textContent = "25 episodes indexed"; });
       })();
     </script>
   </body>
