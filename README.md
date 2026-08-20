@@ -32,12 +32,12 @@ The working prototype now provides:
 - timestamped source citations back to the original episode;
 - an idempotent, review-before-running Elasticsearch index setup and ingestion path.
 
-The local demo has six DAMA LA episodes loaded as 159 searchable transcript
-memories. All 19 recovered Agentic Mesh episodes validate locally as 420
-deterministic chunks, but are not written until the ingestion agent presents an
-exact alias, operation shape, and plan hash and receives explicit approval in a
-later turn. Raw transcripts, generated data, local databases, and credentials
-are never committed.
+The live corpus contains 25 podcast episodes as 579 searchable transcript
+memories: six DAMA LA episodes produce 159 chunks, and 19 Agentic Mesh episodes
+produce 420 chunks. The Agentic Mesh write was executed through the guarded
+ingestion path after its exact alias, operation shape, and plan hash were
+approved. Raw transcripts, generated data, local databases, and credentials are
+never committed.
 
 ## Memory model
 
@@ -125,12 +125,12 @@ the local Mastra server still starts and uses direct Elasticsearch tools.
 
 ## Agentic Mesh write gate
 
-The Agentic Mesh agent first validates the ignored local corpus and returns a
-transcript-free write plan. It cannot write in that same user turn. A later turn
-must explicitly approve the freshly computed SHA-256 plan hash; the write tool
-then uses the `great-questions-memories` alias with `require_alias=true`,
-`refresh=wait_for`, bounded batches, a five-minute request timeout, and explicit
-partial-failure reporting.
+The Agentic Mesh agent validates the ignored local corpus and returns a
+transcript-free write plan. It cannot write in that same user turn. Every future
+ingestion or transcript change must receive approval for its freshly computed
+SHA-256 plan hash. The write tool uses the `great-questions-memories` alias with
+`require_alias=true`, `refresh=wait_for`, bounded batches, a five-minute request
+timeout, and explicit partial-failure reporting.
 
 ## Status
 

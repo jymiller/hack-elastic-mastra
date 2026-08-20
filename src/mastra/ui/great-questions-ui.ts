@@ -19,6 +19,10 @@ import {
 } from "../../lib/perspective-brief.js";
 import { searchPodcastMemory } from "../../lib/podcast-memory-search.js";
 import { greatQuestionsAgent } from "../agents/great-questions-agent.js";
+import {
+  appHeaderCss,
+  renderAppHeader,
+} from "./app-navigation.js";
 
 const chatRequestSchema = z.object({
   messages: z
@@ -90,7 +94,8 @@ const page = String.raw`<!doctype html>
       .shell {
         min-height: 100vh;
         display: grid;
-        grid-template-rows: auto 1fr;
+        grid-template-rows: auto auto 1fr;
+        overflow-x: hidden;
       }
 
       header {
@@ -126,7 +131,17 @@ const page = String.raw`<!doctype html>
       .brand strong { display: block; font-size: 15px; letter-spacing: 0.01em; }
       .brand span { display: block; color: var(--ink-soft); font-size: 12px; }
 
-      .header-actions { display: flex; align-items: center; gap: 10px; }
+      ${appHeaderCss}
+      .research-controls {
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 7px 28px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(10, 13, 12, .54);
+      }
       .notebook-picker {
         display: flex; align-items: center; gap: 7px; padding: 4px 6px 4px 10px;
         border: 1px solid var(--line); border-radius: 999px; color: var(--ink-soft);
@@ -495,12 +510,14 @@ const page = String.raw`<!doctype html>
       @keyframes enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
       @media (max-width: 980px) {
-        main { grid-template-columns: 1fr; }
-        aside { border-left: 0; border-top: 1px solid var(--line); }
+        main { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+        aside { min-width: 0; border-left: 0; border-top: 1px solid var(--line); }
         .research { min-height: auto; }
       }
       @media (max-width: 680px) {
-        header { padding: 13px 16px; }
+        .research-controls { padding: 8px 16px; flex-wrap: wrap; justify-content: flex-start; }
+        .live { margin-right: auto; }
+        .notebook-picker { max-width: calc(100vw - 32px); }
         .trace-link { display: none; }
         .research { padding: 28px 16px 20px; }
         .starters { grid-template-columns: 1fr; }
@@ -515,21 +532,13 @@ const page = String.raw`<!doctype html>
   </head>
   <body>
     <div class="shell">
-      <header>
-        <div class="brand">
-          <div class="mark">GQ</div>
-          <div><strong>Great Questions AI</strong><span>Living research memory</span></div>
-        </div>
-        <div class="header-actions">
-          <div class="live" id="live-status">Elasticsearch connected</div>
-          <label class="notebook-picker"><span>Notebook</span><select id="notebook-select" aria-label="Active research notebook"></select></label>
-          <a class="trace-link" href="/podcast-prep">Podcast prep →</a>
-          <a class="trace-link" href="/architecture">Architecture</a>
-          <a class="trace-link" href="/demo">Demo view</a>
-          <button class="trace-link" id="new-notebook" type="button">New +</button>
-          <a class="trace-link" href="/agents/greatQuestionsAgent/traces" target="_blank" rel="noreferrer">Open traces ↗</a>
-        </div>
-      </header>
+      ${renderAppHeader("research")}
+      <div class="research-controls" aria-label="Research controls">
+        <div class="live" id="live-status">Elasticsearch connected</div>
+        <label class="notebook-picker"><span>Notebook</span><select id="notebook-select" aria-label="Active research notebook"></select></label>
+        <button class="trace-link" id="new-notebook" type="button">New notebook +</button>
+        <a class="trace-link" href="/agents/greatQuestionsAgent/traces" target="_blank" rel="noreferrer">Research traces ↗</a>
+      </div>
 
       <main>
         <section class="research">

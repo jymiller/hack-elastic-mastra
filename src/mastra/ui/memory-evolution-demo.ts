@@ -2,6 +2,10 @@ import {
   createDamaLaPodcastQrSvg,
   damaLaPodcastUrl,
 } from "../../lib/dama-la.js";
+import {
+  appHeaderCss,
+  renderAppHeader,
+} from "./app-navigation.js";
 
 const damaLaQrSvg = await createDamaLaPodcastQrSvg();
 
@@ -45,9 +49,7 @@ export const memoryEvolutionDemoPage = String.raw`<!doctype html>
       .brand strong, .brand span { display: block; }
       .brand strong { font-size: 12px; }
       .brand span { color: var(--soft); font-size: 8px; letter-spacing: .11em; text-transform: uppercase; }
-      nav { display: flex; gap: 6px; }
-      nav a { padding: 6px 9px; border: 1px solid var(--line); border-radius: 999px; color: var(--soft); text-decoration: none; font-size: 9px; }
-      nav a:hover { color: var(--ink); border-color: rgba(93,255,161,.45); }
+      ${appHeaderCss}
       main { width: min(1510px, 100%); margin: auto; padding: 19px clamp(20px, 3.8vw, 58px) 18px; }
       .intro { display: flex; align-items: end; justify-content: space-between; gap: 34px; }
       .eyebrow { color: var(--mint); font-size: 8px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }
@@ -122,7 +124,6 @@ export const memoryEvolutionDemoPage = String.raw`<!doctype html>
         .qr-row { margin-top: 18px; }
       }
       @media (max-width: 560px) {
-        nav a:nth-child(2) { display: none; }
         .intro { display: block; }
         .live { margin-top: 10px; }
         .arc, .lens { grid-template-columns: 1fr; }
@@ -133,10 +134,7 @@ export const memoryEvolutionDemoPage = String.raw`<!doctype html>
     </style>
   </head>
   <body>
-    <header>
-      <div class="brand"><div class="mark">GQ</div><div><strong>Great Questions AI</strong><span>Memory evolution · interactive demo</span></div></div>
-      <nav><a href="/great-questions">Research</a><a href="/podcast-prep">Prep</a><a href="/architecture">Architecture</a></nav>
-    </header>
+    ${renderAppHeader("demo")}
     <main>
       <section class="intro">
         <div><div class="eyebrow">One idea · a living record</div><h1>Memory is not a file. It’s a point of view in motion.</h1></div>

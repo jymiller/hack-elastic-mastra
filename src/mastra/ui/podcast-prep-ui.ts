@@ -11,6 +11,10 @@ import {
   createUiRequestContext,
 } from "../../lib/observability-context.js";
 import { podcastPrepAgent } from "../agents/podcast-prep-agent.js";
+import {
+  appHeaderCss,
+  renderAppHeader,
+} from "./app-navigation.js";
 
 const prepRequestSchema = z.object({
   prepProject: z.string().trim().min(2).max(160),
@@ -82,12 +86,7 @@ const page = String.raw`<!doctype html>
       .brand strong, .brand span { display: block; }
       .brand strong { font-size: 14px; }
       .brand span { color: var(--soft); font-size: 11px; }
-      .nav { display: flex; gap: 8px; }
-      .nav a {
-        padding: 8px 11px; border: 1px solid var(--line); border-radius: 999px;
-        color: var(--soft); text-decoration: none; font-size: 11px;
-      }
-      .nav a:hover { color: var(--ink); border-color: rgba(199,184,255,.45); }
+      ${appHeaderCss}
       main { display: grid; grid-template-columns: minmax(360px, 470px) minmax(0, 1fr); min-height: calc(100vh - 75px); }
       .controls { padding: 42px clamp(22px, 4vw, 54px); border-right: 1px solid var(--line); }
       .eyebrow { color: var(--violet); font-size: 10px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
@@ -169,14 +168,11 @@ const page = String.raw`<!doctype html>
       .error { color: var(--danger); }
       @keyframes pulse { 0%,100% { opacity: .45; } 50% { opacity: 1; } }
       @media (max-width: 900px) { main { grid-template-columns: 1fr; } .controls { border-right: 0; border-bottom: 1px solid var(--line); } .report-shell { min-height: 60vh; } .question-set { grid-template-columns: 1fr; } }
-      @media (max-width: 620px) { header { padding: 12px 15px; } .nav a:first-child { display: none; } .controls, .report-shell { padding: 28px 16px; } .guest-hero { grid-template-columns: 60px 1fr; } .guest-avatar { width: 60px; height: 60px; font-size: 23px; } .profile-ready { grid-column: 1 / -1; justify-self: start; } .tension { grid-template-columns: 1fr; gap: 12px; } }
+      @media (max-width: 620px) { .controls, .report-shell { padding: 28px 16px; } .guest-hero { grid-template-columns: 60px 1fr; } .guest-avatar { width: 60px; height: 60px; font-size: 23px; } .profile-ready { grid-column: 1 / -1; justify-self: start; } .tension { grid-template-columns: 1fr; gap: 12px; } }
     </style>
   </head>
   <body>
-    <header>
-      <div class="brand"><div class="mark">GQ</div><div><strong>Podcast Prep</strong><span>Great Questions AI</span></div></div>
-      <div class="nav"><a href="/great-questions">Research memory</a><a href="/architecture">Architecture</a><a href="/demo">Demo view</a><a href="/agents/podcastPrepAgent/traces" target="_blank" rel="noreferrer">Open traces ↗</a></div>
-    </header>
+    ${renderAppHeader("podcast-prep")}
     <main>
       <section class="controls">
         <div class="eyebrow">Interview intelligence</div>

@@ -27,11 +27,10 @@ async function main(): Promise<void> {
     );
   }
 
-  // Load the existing agent only after validating credentials. Importing it may
-  // connect optional MCP servers configured for that agent.
-  const { greatQuestionsAgent } = await import(
-    "../src/mastra/agents/great-questions-agent.js"
-  );
+  // Resolve the agent from its Mastra instance so configured storage,
+  // observability, and memory are available on this direct CLI path too.
+  const { mastra } = await import("../src/mastra/index.js");
+  const greatQuestionsAgent = mastra.getAgent("greatQuestionsAgent");
   const response = await greatQuestionsAgent.generate(question);
   const answer = response.text.trim();
 
